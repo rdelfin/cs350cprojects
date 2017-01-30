@@ -23,11 +23,11 @@ tarai:
     # Tarai calculation
 
     # tarai(x-1, y, z)
-    push %rdi # Store x
-    push %rsi # Store y
-    push %rdx # Store z
+    push %rdi       # Store x
+    push %rsi       # Store y
+    push %rdx       # Store z
 
-    add $-1, %rdi   # x-1
+    add $-1, %edi   # x-1
     call tarai      # Recursive call
 
     pop %rdx          # Restore z
@@ -43,7 +43,7 @@ tarai:
     push %rsi         # Store y (actually z)
     push %rdx         # Store z (actually x)
 
-    add $-1, %rdi     # y-1
+    add $-1, %edi     # y-1
     call tarai        # Recursive call
 
     pop %rdx          # Restore z (actually x)
@@ -59,7 +59,7 @@ tarai:
     push %rsi         # Store y (actually x)
     push %rdx         # Store z (actually y)
 
-    add $-1, %rdi     # z-1
+    add $-1, %edi     # z-1
     call tarai        # Recursive call
 
     pop %rdx          # Restore z (actually z)
@@ -69,8 +69,8 @@ tarai:
 
     # HERE COMES THE FUN STUFF (outer recursive call)
     mov %r12, %rdi   # Move first result into x (RDI)
-    mov %r13, %rsi   # Move second result into y (RDI)
-    mov %r14, %rdx   # Move third result into z (RDI)
+    mov %r13, %rsi   # Move second result into y (RSI)
+    mov %r14, %rdx   # Move third result into z (RDX)
 
     call tarai
 
@@ -82,6 +82,6 @@ taraiend:
     pop %r12
 
     # End of function
-    mov %rsp, %rbp
+    mov %rbp, %rsp
     pop %rbp
     ret

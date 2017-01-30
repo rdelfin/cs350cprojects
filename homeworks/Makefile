@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -O2
 
-tak: tak.c tarai.s
+all: tak.c tarai.s
 		$(CC) $(CFLAGS) -o tak tak.c tarai.s
 
 clean:
