@@ -1,1 +1,0 @@
-/usr/bin/cc     CMakeFiles/hw1.dir/tak.c.o CMakeFiles/hw1.dir/tarai.s.o  -o hw1 
