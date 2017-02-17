@@ -2,7 +2,8 @@
 
 typedef struct {
     size_t len;
-    char* data;
+    size_t dataLen;
+    uint8_t* data;
 } bitmatrix_t;
 
 void bitmatrix_init(bitmatrix_t*, size_t);
