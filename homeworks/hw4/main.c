@@ -6,6 +6,7 @@
 
 bitmatrix_t* read_file(char* fileName, uint8_t diag);
 bitmatrix_t* reachability_matrix(bitmatrix_t* mat);
+void print_row(uint8_t* rowBuff, size_t n);
 
 int main(int argc, char* argv[]) {
     if(argc != 2 && argc != 3) {
@@ -17,12 +18,16 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    bitmatrix_t* mat = read_file(argv[1], (uint8_t) (argc == 3 ? (atoi(argv[2]) & 1) : 0));
 
+    bitmatrix_t* mat = read_file(argv[1], (uint8_t) (argc == 3 ? (atoi(argv[2]) & 1) : 0));
     bitmatrix_t* reachMat = reachability_matrix(mat);
 
-    bitmatrix_print(reachMat);
-    
+    uint8_t rowBuffer[reachMat->rowBytes];
+    bitmatrix_xorrows(mat, rowBuffer);
+    print_row(rowBuffer, mat->cols);
+
+    free(mat);
+    free(reachMat);
     return 0;
 }
 
@@ -94,3 +99,17 @@ bitmatrix_t* reachability_matrix(bitmatrix_t* mat) {
     return reachMat;
 }
 
+/**
+ * Prints a bit-vector row, with n elements, tightly packed.
+ * @param rowBuff Data pointer
+ * @param n Number of bits
+ */
+void print_row(uint8_t* rowBuff, size_t n) {
+    for(size_t i = 0; i < n; i++) {
+        size_t idx = i / 8;
+        size_t bit = i % 8;
+        printf("%u ", get_bit_b(rowBuff[idx], bit));
+    }
+
+    printf("\n");
+}

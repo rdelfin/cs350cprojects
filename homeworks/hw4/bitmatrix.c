@@ -4,17 +4,27 @@
 #include <string.h>
 #include "bitops.h"
 
+/**
+ * Facilitates matrix offset calculations. Gets the index of the byte in the data
+ * array where where a given bit index can be found.
+ */
 static inline int get_byte_position(size_t i, size_t j, size_t len) {
     return (int) ((i * len + j) / (sizeof(uint8_t) * 8));
 }
 
+/**
+ * Facilitates matrix offset calculations. Gets the index within a byte where a given
+ * bit can be found.
+ */
 static inline int get_bit_offset(size_t i, size_t j, size_t len) {
     return (int) ((i * len + j) % (sizeof(uint8_t) * 8));
 }
 
 
 bitmatrix_t* bitmatrix_init(size_t r, size_t c) {
-    bitmatrix_t* mat = malloc(sizeof(bitmatrix_t));
+    bitmatrix_t* mat = malloc(sizeof(bitmatrix_t));         // All memory is allocated on the heap
+
+    // Initialize all default values
     mat->rows = r;
     mat->cols = c;
     mat->dataLen = 0;
@@ -24,6 +34,7 @@ bitmatrix_t* bitmatrix_init(size_t r, size_t c) {
         mat->dataLen = mat->rowBytes * mat->rows;
         mat->data = malloc(mat->dataLen * sizeof(uint8_t));
 
+        // Initialize all data to 0
         for(int i = 0; i < mat->dataLen; i++) {
             mat->data[i] = 0;
         }
@@ -34,6 +45,7 @@ bitmatrix_t* bitmatrix_init(size_t r, size_t c) {
 
 bitmatrix_t* bitmatrix_init_cpy(bitmatrix_t* src) {
     bitmatrix_t* mat = bitmatrix_init(src->rows, src->cols);
+    // Just copy the data over using memcpy
     memcpy(mat->data, src->data, mat->dataLen);
 
     return mat;
@@ -71,13 +83,33 @@ void bitmatrix_set(bitmatrix_t* mat, size_t i, size_t j, uint8_t val) {
 }
 
 void bitmatrix_getrow(bitmatrix_t* mat, uint8_t* data, size_t i) {
+    // This result will probably contained unused bits (since each row must start at it's own byte)
     uint8_t* rowStart = &mat->data[i * mat->rowBytes];
     memcpy(data, rowStart, mat->rowBytes);
 }
 
 void bitmatrix_setrow(bitmatrix_t* mat, uint8_t* data, size_t i) {
+    // This result will probably set unused bits (since each row must start at it's own byte)
     uint8_t* rowStart = &mat->data[i * mat->rowBytes];
     memcpy(rowStart, data, mat->rowBytes);
+}
+
+void bitmatrix_xorrows(bitmatrix_t* mat, uint8_t* data) {
+    uint8_t rowBuf[mat->rowBytes];
+
+    // Since xor has no idempotent value, write first row to data
+    bitmatrix_getrow(mat, data, 0);
+
+    // Actual calculation. Get each row and xor with
+    for(size_t i = 0; i < mat->rows; i++) {
+        // Get the row to fetch
+        bitmatrix_getrow(mat, rowBuf, i);
+
+        // Calculate xor
+        for(size_t j = 0; j < mat->rowBytes; j++) {
+            data[j] = data[j] ^ rowBuf[j];
+        }
+    }
 }
 
 void bitmatrix_print(bitmatrix_t* mat) {
