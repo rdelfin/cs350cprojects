@@ -49,6 +49,10 @@ bitmatrix_t* read_file(char* fileName, uint8_t diag) {
     // Will initialize object and set all values in the matrix to 0
     bitmatrix_t* mat = bitmatrix_init(len, len);
 
+    // Set diagonal to the value of diag
+    for(size_t i = 0; diag == 1 && i < len; i++)
+        bitmatrix_set(mat, i, i, diag);
+
     // Iterate over all lines
     while(getline(&line, &len, matFile) != -1) {
         size_t start, end;
@@ -64,9 +68,6 @@ bitmatrix_t* read_file(char* fileName, uint8_t diag) {
         bitmatrix_set(mat, start, end, 1);
     }
 
-    // Set diagonal to the value of diag
-    for(size_t i = 0; diag == 1 && i < len; i++)
-        bitmatrix_set(mat, i, i, diag);
 
     return mat;
 }

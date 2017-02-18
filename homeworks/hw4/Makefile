@@ -9,4 +9,4 @@ all: main.o bitmatrix.o bitops.o
 	gcc -g -o bin/graph build/main.o build/bitmatrix.o build/bitops.o -I.
 
 clean:
-	rm *.o graph
+	rm -rf bin/* build/*
