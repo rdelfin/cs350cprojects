@@ -41,7 +41,6 @@
 #define MAX_EXPONENT_SIZE  (27)
 #define MAX_ENTRIES        (1 << MAX_EXPONENT_SIZE)
 
-#define PAGE_SIZE          (4096)
 #define EXTRA              (PAGE_SIZE)
 
 
@@ -94,6 +93,9 @@ unsigned long int chase_indices ( unsigned long int *mem )
     unsigned long int iters = 0;
 
     unsigned long int idx, idxv;
+    
+    double clk_rate = mhz(0, 1);
+    start_counter();
 
     do {
 
@@ -152,6 +154,10 @@ unsigned long int chase_indices ( unsigned long int *mem )
     }
     while ( iters < 4000000 );
 
+    double time = get_counter();
+    
+    printf("Time: %.4fs\n", time / (clk_rate * 1000000));
+    printf("Clock Rate: %.2f MHz\n", clk_rate);
     printf("Iters: %ld\n", iters);
     return ( val );
 }
