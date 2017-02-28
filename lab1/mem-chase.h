@@ -7,23 +7,10 @@
 // program in "mem-chase.c" runs both as fast as possible and as
 // slow as possible.
 
-#define skylake_type 1
-
-#if skylake_type == 1
-
 #define PAGE_SIZE          (4096)
 #define L1_SIZE_PAGES      (1)
 #define L2_SIZE_PAGES      (16)
 #define L3_SIZE_PAGES      (128)
-
-#else
-
-#define PAGE_SIZE          (4096)
-#define L1_SIZE_PAGES      (1)
-#define L2_SIZE_PAGES      (16)
-#define L3_SIZE_PAGES      (128)
-
-#endif
 
 #define SLOW_MODE 1
 
@@ -43,10 +30,6 @@ unsigned long int div_up(unsigned long int a, unsigned long int b) {
 }
 
 void init_data_slow( unsigned long int mem[], unsigned long int size ) {
-    printf("Asking you to stay\n");
-    printf("The words are finally here\n");
-    printf("Let's rewind, and rewind\n");
-    
     char first = 1;
     unsigned long int prevIdx = 0;
     unsigned long int elems_per_page = PAGE_SIZE / sizeof(unsigned long int);
