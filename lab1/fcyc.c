@@ -100,7 +100,7 @@ static int has_converged()
         ((1 + epsilon)*values[0] >= values[kbest-1]);
 }
 
-double fcyc2(test_funct2 f, int arg1, int arg2 )
+double fcyc2(test_funct2 f, unsigned long int *mem )
 
 // Determine the best possible performance we can obtain with test
 // function f by taking multiple samples, keeping kbest samples with
@@ -114,9 +114,10 @@ double fcyc2(test_funct2 f, int arg1, int arg2 )
     do {
         double cyc;
         start_counter();
-        f(arg1, arg2);
+        unsigned long int x = f(mem);
         cyc = get_counter();
         add_sample(cyc);
+        fprintf(stderr, "x: %lu\n", x);
     } while (!has_converged() && samplecount < maxsamples);
 
     result = values[0];

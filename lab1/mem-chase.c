@@ -78,11 +78,10 @@ int main(int argc, char *argv[], char *env[] )
          init_data_slow( mem, size );
     else
         init_data_fast( mem, size );
-
-    unsigned long int x = chase_indices( mem );
-
-    // Return (part of x) to force execution of above code.
-    exit(x % 256);
+    
+    double clk_rate = mhz(0, 1);
+    double cycles = fcyc2( chase_indices, mem );
+    printf("Timing: %.4fs\n", cycles / (clk_rate*1000000.0));
 }
 
 unsigned long int chase_indices ( unsigned long int *mem )
@@ -94,9 +93,6 @@ unsigned long int chase_indices ( unsigned long int *mem )
 
     unsigned long int idx, idxv;
     
-    double clk_rate = mhz(0, 1);
-    start_counter();
-
     do {
 
       do {
@@ -149,15 +145,58 @@ unsigned long int chase_indices ( unsigned long int *mem )
         // 32
         // Restore memory value
         //W mem[ idx ] = idxv;
+
+
+        // 0
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        // 4
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        // 8
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        // 12
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        //W idx = val;
+        val = mem[ val ];
+        // 16
+        // Set memory value to 0
+        //W idxv = val;
+        //W mem[ idx ] = 0;
+        // 16
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        // 20
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        // 24
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        // 28
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        val = mem[ val ];
+        // 32
       }
       while ( val );
     }
-    while ( iters < 4000000 );
+    while ( iters < 2000000 );
 
-    double time = get_counter();
-    
-    printf("Time: %.4fs\n", time / (clk_rate * 1000000));
-    printf("Clock Rate: %.2f MHz\n", clk_rate);
-    printf("Iters: %ld\n", iters);
     return ( val );
 }
