@@ -10,6 +10,7 @@ typedef struct {
 } vec_t;
 
 vec_t* vec_init();
+uint64_t vec_len(vec_t*);
 void vec_push_back(vec_t*, uint8_t);
 uint8_t vec_get_val(vec_t*, uint64_t);
 void vec_set_val(vec_t*, uint64_t, uint8_t);

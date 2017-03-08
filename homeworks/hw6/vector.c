@@ -18,6 +18,11 @@ vec_t* vec_init() {
 
     return vector;
 }
+
+uint64_t vec_len(vec_t* vec) {
+    return vec->size;
+}
+
 void vec_push_back(vec_t* vec, uint8_t num) {
     // Expand first only if neccessary to size alloc_size*2
     if(vec->size >= vec->alloc_size) {
