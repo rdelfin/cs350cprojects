@@ -2,6 +2,8 @@
 #define _INSTRUCTIONS_H_
 
 #include <cstdint>
+#include <string>
+#include <map>
 
 typedef uint64_t y86addr_t;
 

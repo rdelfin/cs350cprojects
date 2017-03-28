@@ -1,0 +1,4 @@
+(
+	start
+	(movq %rax %rbx)
+)

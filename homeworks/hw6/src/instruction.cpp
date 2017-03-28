@@ -52,7 +52,7 @@ inline bool isInteger(const std::string & s)
 instruction::instruction() {
 }
 
-instruction::instruction(std::string code) {
+instruction::instruction(std::string code, const std::map<std::string, y86addr_t> labelmap) {
     this->r1 = 0;
     this->r2 = 0;
     this->value = 0;
@@ -89,16 +89,16 @@ instruction::instruction(std::string code) {
         case CMOVG:
             parse_as_rrmovl(codestream);
             break;
-        case RMMOVL:
+        case RMMOVQ:
             parse_as_rmmovl(codestream);
             break;
-        case MRMOVL:
+        case MRMOVQ:
             parse_as_mrmovl(codestream);
             break;
-        case ADDL:
-        case SUBL:
-        case ANDL:
-        case XORL:
+        case ADDQ:
+        case SUBQ:
+        case ANDQ:
+        case XORQ:
             parse_as_op(codestream);
             break;
         case JMP:
@@ -116,10 +116,10 @@ instruction::instruction(std::string code) {
         case RET:
             parse_as_ret(codestream);
             break;
-        case PUSHL:
+        case PUSHQ:
             parse_as_pushl(codestream);
             break;
-        case POPL:
+        case POPQ:
             parse_as_popl(codestream);
             break;
     }
@@ -151,7 +151,7 @@ uint8_t instruction::reg_string_to_code(std::string str) {
             {"%r14", 14}
     };
 
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower;
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
     if(register_map.count(str) == 0) {
         throw "Unexpected instruction";
@@ -192,7 +192,7 @@ uint8_t instruction::instr_string_to_size(std::string str) {
             {"popq",   2}
     };
 
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower;
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
     if(instruction_map.count(str) == 0) {
         throw "Unexpected instruction";
@@ -233,7 +233,7 @@ uint8_t instruction::instr_string_to_code(std::string str) {
             {"popq",   POPQ}
     };
 
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower;
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
     if(instruction_map.count(str) == 0) {
         throw "Unexpected instruction";
@@ -275,43 +275,65 @@ void instruction::parse_as_rmmovl(std::stringstream& stream) {
         throw "Invalid register token";
     }
 
-    this->r1 = reg_string_to_code(reg1.substr(0, reg1.size() - 1));
+    this->r1 = reg_string_to_code(reg1.substr(1, reg1.size() - 1));
     this->r2 = reg_string_to_code(reg2.substr(0, reg2.size() - 1));
+
+    // Use value somehow
 }
 
 
-void instruction::parse_as_mrmovl(std::stringstream&) {
+void instruction::parse_as_mrmovl(std::stringstream& stream) {
+    // Parse two registers
+    std::string reg1, reg2, val;
+    stream >> reg1 >> val >> reg2;
 
+    if(reg1[reg1.size() - 1] != ',' || reg2[reg2.size() - 1] != ')') {
+        throw "Invalid register token";
+    }
+
+    this->r1 = reg_string_to_code(reg1.substr(0, reg1.size() - 1));
+    this->r2 = reg_string_to_code(reg2.substr(1, reg2.size() - 1));
+
+    // Use value somehow
 }
 
 
-void instruction::parse_as_op(std::stringstream&) {
-
+void instruction::parse_as_op(std::stringstream& stream) {
+    parse_as_rrmovl(stream);
 }
 
 
-void instruction::parse_as_jmp(std::stringstream&) {
-
+void instruction::parse_as_jmp(std::stringstream& stream) {
+    std::string val;
+    stream >> val;
 }
 
 
-void instruction::parse_as_call(std::stringstream&) {
-
+void instruction::parse_as_call(std::stringstream& stream) {
+   parse_as_jmp(stream);
 }
 
 
 void instruction::parse_as_ret(std::stringstream&) {
-
+    // Do nothing
 }
 
 
-void instruction::parse_as_pushl(std::stringstream&) {
+void instruction::parse_as_pushl(std::stringstream& stream) {
+   std::string reg;
+    stream >> reg;
 
+    if(reg[reg.size() - 1] == ')') {
+        reg = reg.substr(0, reg.size() - 1);
+    }
+
+    this->r1 = reg_string_to_code(reg);
+    this->r2 = 0xF;
 }
 
 
-void instruction::parse_as_popl(std::stringstream&) {
-
+void instruction::parse_as_popl(std::stringstream& stream) {
+    parse_as_pushl(stream);
 }
 
 

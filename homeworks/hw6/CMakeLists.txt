@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.0)
 project(hw6)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -9,7 +9,7 @@ set(SOURCE_FILES
         src/args.cpp
         src/assembler.cpp
         src/instruction.cpp
-        src/asmcode.cpp
+        src/tree.cpp
         )
 
 add_executable(hw6 ${SOURCE_FILES})
