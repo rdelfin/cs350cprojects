@@ -7,7 +7,14 @@
 int main(int argc, char* argv[]) {
     std::string fileContent = get_content(argc, argv);
 
-    tree t(fileContent);
+    try {
+        tree t(fileContent);
 
-    t.print();
+        t.print();
+    } catch(ParsingException p) {
+        std::cerr << "There was an error parsing the file." << std::endl;
+        std::cerr << "\t" << p.message << std::endl;
+        return -1;
+    }
+
 }
