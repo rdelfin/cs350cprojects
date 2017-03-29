@@ -100,7 +100,6 @@ public:
         return {
                 { "halt", HALT },
                 { "nop", NOP },
-                { "noop", NOP },
                 { "rrmovl", RRMOVL },
                 { "cmovle", CMOVLE },
                 { "cmovl", CMOVL },
