@@ -89,7 +89,7 @@ instruction::instruction(node* n, const std::unordered_map<std::string, y86addr_
 
 }
 
-void instruction::write_to_memory(std::map<y86addr_t, uint8_t> memMap, y86addr_t* addr) {
+void instruction::write_to_memory(std::map<y86addr_t, uint8_t>& memMap, y86addr_t* addr) {
     uint8_t bytes[10];
     // Special case for call and jmp
     if(instr_code == CALL || instr_code == JMP || instr_code == JLE || instr_code == JL || instr_code == JE ||
@@ -100,13 +100,13 @@ void instruction::write_to_memory(std::map<y86addr_t, uint8_t> memMap, y86addr_t
         *val_ptr = value;
     } else {
         bytes[0] = instr_code;
-        bytes[1] = (r1 << 8) & r2;
+        bytes[1] = (r1 << 4) | r2;
         // ASSUMPTION: This is a little endian machine
         y86addr_t* val_ptr = (y86addr_t*)(bytes + 2);
         *val_ptr = value;
     }
 
-    for(size_t i = 0; i < len; i++, *addr++)
+    for(size_t i = 0; i < len; i++, (*addr)++)
         memMap[*addr] = bytes[i];
 }
 
@@ -192,7 +192,7 @@ void instruction::parse_as_rrmovq(node* n) {
 }
 
 
-void instruction::parse_as_rmmovq(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error) {
+void instruction::parse_as_rmmovq(node* n, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error) {
 
     if(n->children.size() != 3 && n->children.size() != 4)
         throw InvalidInstructionException("rmmovq requires exactly 2 arguments");
@@ -216,7 +216,7 @@ void instruction::parse_as_rmmovq(node* n, const std::unordered_map<std::string,
 }
 
 
-void instruction::parse_as_mrmovq(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error) {
+void instruction::parse_as_mrmovq(node* n, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error) {
 
     if(n->children.size() != 3 && n->children.size() != 4)
         throw InvalidInstructionException("mrmovq requires exactly 2 arguments");
@@ -246,7 +246,7 @@ void instruction::parse_as_op(node* n) {
 }
 
 
-void instruction::parse_as_jmp(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error) {
+void instruction::parse_as_jmp(node* n, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error) {
     if(n->children.size() != 2)
         throw InvalidInstructionException("This instruction must have exactly one argument");
 
@@ -259,7 +259,7 @@ void instruction::parse_as_jmp(node* n, const std::unordered_map<std::string, y8
 }
 
 
-void instruction::parse_as_call(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error) {
+void instruction::parse_as_call(node* n, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error) {
    parse_as_jmp(n, labelmap, ignore_label_error);
 }
 
@@ -290,7 +290,7 @@ void instruction::parse_as_leave(node* n) {
     parse_as_halt(n);
 }
 
-void instruction::parse_as_irmovq(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error) {
+void instruction::parse_as_irmovq(node* n, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error) {
     if(n->children.size() != 3)
         throw InvalidInstructionException("irmovq must have exactly 2 arguments");
     if(!n->children[1]->isLeaf)
@@ -303,12 +303,12 @@ void instruction::parse_as_irmovq(node* n, const std::unordered_map<std::string,
     this->value = immediate_string_to_value(n->children[1]->value, labelmap, ignore_label_error);
 }
 
-void instruction::parse_as_iaddq(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error) {
+void instruction::parse_as_iaddq(node* n, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error) {
     parse_as_irmovq(n, labelmap, ignore_label_error);
 }
 
 y86addr_t instruction::immediate_string_to_value(const std::string& value,
-                                                 std::unordered_map<std::string, y86addr_t> labelmap,
+                                                 const std::unordered_map<std::string, y86addr_t>& labelmap,
                                                  bool ignore_label_error) {
     y86addr_t val = 0;
 
@@ -338,7 +338,8 @@ y86addr_t instruction::immediate_string_to_value(const std::string& value,
                    throw InvalidLabelException(ss.str());
             }
         } else {
-            val = labelmap[value];
+
+            val = labelmap.at(value);
         }
     }
 

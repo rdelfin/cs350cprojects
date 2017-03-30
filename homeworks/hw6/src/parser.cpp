@@ -58,7 +58,6 @@ void parser::parseBytes() {
 
 
     for(auto it = n->children.begin(); it != n->children.end(); ++it) {
-        node* child = *it;
         // If directive, parse through this class
         if(isDirective(*it)) {
             parseDirective(*it, &address);

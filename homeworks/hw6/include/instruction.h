@@ -14,7 +14,7 @@ public:
     instruction();
     instruction(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
 
-    void write_to_memory(std::map<y86addr_t, uint8_t> memMap, y86addr_t* addr);
+    void write_to_memory(std::map<y86addr_t, uint8_t>& memMap, y86addr_t* addr);
 
     uint8_t len;
     uint8_t instr_code;
@@ -31,20 +31,20 @@ private:
     void parse_as_halt(node *);
     void parse_as_nop(node *);
     void parse_as_rrmovq(node *);
-    void parse_as_rmmovq(node *, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
-    void parse_as_mrmovq(node *, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
+    void parse_as_rmmovq(node *, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error);
+    void parse_as_mrmovq(node *, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error);
     void parse_as_op(node *);
-    void parse_as_jmp(node *, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
-    void parse_as_call(node *, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
+    void parse_as_jmp(node *, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error);
+    void parse_as_call(node *, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error);
     void parse_as_ret(node *);
     void parse_as_pushq(node *);
     void parse_as_popq(node *);
     void parse_as_leave(node *);
-    void parse_as_irmovq(node *, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
-    void parse_as_iaddq(node*, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
+    void parse_as_irmovq(node *, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error);
+    void parse_as_iaddq(node*, const std::unordered_map<std::string, y86addr_t>& labelmap, bool ignore_label_error);
 
     y86addr_t immediate_string_to_value(const std::string&,
-                                        std::unordered_map<std::string, y86addr_t> labelmap,
+                                        const std::unordered_map<std::string, y86addr_t>& labelmap,
                                         bool ignore_label_error);
 };
 
