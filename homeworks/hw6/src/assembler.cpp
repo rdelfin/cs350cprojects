@@ -6,21 +6,25 @@
 #include <args.h>
 #include <instruction.h>
 #include <tree.h>
+#include <parser.h>
 
 int main(int argc, char* argv[]) {
     std::string fileContent = get_content(argc, argv);
     std::string sample_instruction = "(rrmovq %rbx %rcx)";
 
     try {
-        tree t(sample_instruction);
+        tree t(fileContent);
 
-        t.print();
+        parser p(t.root.children[0]);
+        p.parse();
 
-        instruction i(t.root.children[0], std::unordered_map<std::string, y86addr_t>(), true);
-        std::cout << "INSTRUCTION: \n"
-                  << "\tCode: " << (int)i.instr_code << "\n"
-                  << "\tR1: " << (int)i.r1 << "\n"
-                  << "\tR2: " << (int)i.r2 << std::endl;
+        std::map<y86addr_t, uint8_t> memory = p.getMemMap();
+        std::cout << "(" << std::endl;
+        for(auto it = memory.begin(); it != memory.end(); ++it) {
+            std::cout << "\t(" << std::hex << it->first << ", " << it->second << std::dec << ")" << std::endl;
+        }
+
+        std::cout << ")" << std::endl;
 
     } catch(ParsingException p) {
         std::cerr << "There was an error parsing the file." << std::endl;

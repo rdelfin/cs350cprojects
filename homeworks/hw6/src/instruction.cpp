@@ -1,45 +1,12 @@
 #include <instruction.h>
 #include <instruction_definitions.h>
+#include <parsing_functions.h>
 
-#include <cstdint>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <map>
 #include <algorithm>
-
-
-
-inline bool is_whitespace(char c) {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
-}
-
-inline bool isDecimalInteger(const std::string &s)
-{
-    if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+')))
-        return false;
-
-    for(const char* p = s.c_str()+1; *p != '\0'; p++)
-        if(!isdigit(*p))
-            return false;
-
-    return true;
-}
-
-inline bool ishexdigit(const char c) {
-    return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9');
-}
-
-inline bool isHexInteger(const std::string &s) {
-    if(s.empty() || !(s[0] == '#' || ((s[0] != '-' || s[0] != '+') && s[1] == '#')))
-        return false;
-
-    for(const char* p = s.c_str() + (s[0] == '#' ? 1 : 2); *p != '\0'; p++)
-        if(!ishexdigit(*p))
-            return false;
-
-    return true;
-}
 
 instruction::instruction() {
 }
@@ -112,8 +79,35 @@ instruction::instruction(node* n, const std::unordered_map<std::string, y86addr_
         case IRMOVQ:
             parse_as_irmovq(n, labelmap, ignore_label_error);
             break;
+        case LEAVE:
+            parse_as_leave(n);
+        default:
+            std::stringstream ss;
+            ss << "Invalid instruction! Instruction " << instr_string << " is not defined.";
+            throw InvalidInstructionException(ss.str());
     }
 
+}
+
+void instruction::write_to_memory(std::map<y86addr_t, uint8_t> memMap, y86addr_t* addr) {
+    uint8_t bytes[10];
+    // Special case for call and jmp
+    if(instr_code == CALL || instr_code == JMP || instr_code == JLE || instr_code == JL || instr_code == JE ||
+       instr_code == JNE  || instr_code == JG) {
+        bytes[0] = instr_code;
+        // ASSUMPTION: This is a little endian machine
+        y86addr_t* val_ptr = (y86addr_t*)(bytes + 1);
+        *val_ptr = value;
+    } else {
+        bytes[0] = instr_code;
+        bytes[1] = (r1 << 8) & r2;
+        // ASSUMPTION: This is a little endian machine
+        y86addr_t* val_ptr = (y86addr_t*)(bytes + 2);
+        *val_ptr = value;
+    }
+
+    for(size_t i = 0; i < len; i++, *addr++)
+        memMap[*addr] = bytes[i];
 }
 
 
@@ -228,7 +222,7 @@ void instruction::parse_as_mrmovq(node* n, const std::unordered_map<std::string,
         throw InvalidInstructionException("mrmovq requires exactly 2 arguments");
 
     bool has_offset = n->children.size() == 4;
-    int r1_idx = has_offset ? 2 : 3;
+    int r1_idx = has_offset ? 2 : 1;
     int r2_idx = has_offset ? 3 : 2;
 
     if(!n->children[r2_idx]->isLeaf)
@@ -239,7 +233,7 @@ void instruction::parse_as_mrmovq(node* n, const std::unordered_map<std::string,
         throw InvalidInstructionException("The first register of mrmovq should be a register in exactly one set of parenthesis");
 
     // Parse two registers
-    std::string reg1 = n->children[r1_idx]->children[0]->value, reg2 = n->children[r1_idx]->value, value = has_offset ? n->children[1]->value : "";
+    std::string reg1 = n->children[r1_idx]->children[0]->value, reg2 = n->children[r2_idx]->value, value = has_offset ? n->children[1]->value : "";
 
     this->r1 = reg_string_to_code(reg1);
     this->r2 = reg_string_to_code(reg2);
@@ -303,6 +297,14 @@ void instruction::parse_as_irmovq(node* n, const std::unordered_map<std::string,
         throw InvalidInstructionException("The immediate value of irmovq should have no parenthesis");
     if(!n->children[2]->isLeaf)
         throw InvalidInstructionException("The register of irmovq should have no parenthesis");
+
+    this->r1 = 0x0F;
+    this->r2 = reg_string_to_code(n->children[2]->value);
+    this->value = immediate_string_to_value(n->children[1]->value, labelmap, ignore_label_error);
+}
+
+void instruction::parse_as_iaddq(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error) {
+    parse_as_irmovq(n, labelmap, ignore_label_error);
 }
 
 y86addr_t instruction::immediate_string_to_value(const std::string& value,
@@ -342,3 +344,4 @@ y86addr_t instruction::immediate_string_to_value(const std::string& value,
 
     return val;
 }
+

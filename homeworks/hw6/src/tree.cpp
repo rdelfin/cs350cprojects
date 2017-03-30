@@ -11,6 +11,7 @@
 bool isWhitespace(int c);
 bool skipWhitespace(std::stringstream&);
 std::string getToken(std::stringstream&);
+std::string stripComments(const std::string&);
 
 node::node() { }
 
@@ -45,7 +46,7 @@ void node::print(int level) {
     std::stringstream indStream;
     std::string indentation;
     for(int i = 0; i < level; i++)
-        indStream.put('\t');
+        indStream.put('  ');
     indentation = indStream.str();
 
     if(isLeaf) {
@@ -76,8 +77,10 @@ tree::tree() {
 
 
 tree::tree(const std::string& s) {
+    std::string noComentStr = stripComments(s);
+
     // Begin parsing tree with stringstream
-    std::stringstream stream(s);
+    std::stringstream stream(noComentStr);
     std::stack<node*> nodeStack;
 
     root = node(std::vector<node*>());
@@ -119,6 +122,24 @@ void tree::print() {
     root.print();
 }
 
+std::string stripComments(const std::string& s) {
+    std::stringstream text;
+
+    bool in_comment = false;
+    for(const char* p = s.c_str(); *p != '\0'; p++) {
+        if(!in_comment) {
+            if(*p == ';')
+                in_comment = true;
+            else
+                text.put(*p);
+        } else if(*p == '\n') {
+            in_comment = false;
+        }
+    }
+
+    return text.str();
+}
+
 std::string getToken(std::stringstream& inStream) {
     std::stringstream outStream;
 
@@ -142,5 +163,5 @@ bool skipWhitespace(std::stringstream& s) {
 }
 
 bool isWhitespace(int c) {
-   return c == ' ' || c == '\n' || c == '\t';
+   return c == ' ' || c == '\n' || c == '\t' || c == '\r';
 }

@@ -38,6 +38,8 @@
 #define LEAVE  0xD0
 #define NOOP   0xF0
 
+typedef uint64_t y86addr_t;
+
 class instruction_maps {
 public:
     static std::unordered_map<std::string, uint8_t> sizes() {

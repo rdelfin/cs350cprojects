@@ -7,37 +7,37 @@
     (halt)
     
         ;    Array of values to be sorted
-        (align 4)
-        array:
-        (quad #x0b)
-        (quad #x0e)
-        (quad #x05)
-        (quad #x0a)
-        (quad #x07)
-        (quad #x0d)
-        (quad #x09)
-        (quad #x01)
-        (quad #x02)
-        (quad #x06)
-        (quad #x08)
-        (quad #x0c)
-        (quad #x0f)
-        (quad #x03)
-        (quad #x04)
-        (quad #x00)
+        (align 8)
+        array
+;        (qword #x0b)
+;        (qword #x0e)
+;        (qword #x05)
+;        (qword #x0a)
+;        (qword #x07)
+;        (qword #x0d)
+;        (qword #x09)
+;        (qword #x01)
+;        (qword #x02)
+;        (qword #x06)
+;        (qword #x08)
+;        (qword #x0c)
+;        (qword #x0f)
+;        (qword #x03)
+;        (qword #x04)
+;        (qword #x00)
         
         Main
         (pushq %rbp)            ; Push old value of rbp
         (rrmovq %rsp %rbp)      ; Move rbp to the end of the stack (at the old value of rbp)
 
         (irmovq array %rcx)     ; rcx = data (pointer)
-        (irmovq $16 %rdx)       ; rdx = count (; of items in array)
+        (irmovq 16 %rdx)        ; rdx = count (; of items in array)
                 
         (pushq %rdx)            ; Push 2nd argument (count)
         (pushq %rcx)            ; Push 1st argument (data pointer)
         (call bubble_sort)      ; Call bubble_sort(data, count)
                 
-        (irmovq $0 %rax)       ; main return set to 0
+        (irmovq 0 %rax)        ; main return set to 0
 
         (rrmovq %rbp %rsp)     ; Move stack pointer back up
         (popq %rbp)            ; Pop old rbp value
@@ -53,13 +53,13 @@
         (pushq %rdi)          ; Save callee-saved register %rdi
                 
         ; Get arguments into registers:
-        (irmovq $8 %rdx)     ; Move 8 into rdx BECAUSE THERE ARE NO OFFSETS IN Y86 DAMMIT!
+        (irmovq 8 %rdx)      ; Move 8 into rdx BECAUSE THERE ARE NO OFFSETS IN Y86 DAMMIT!
         (rrmovq %rbp %rbx)   ; Move stack pointer into %rbx to change it
         (addq %rdx %rbx)     ; Add 8 to rsp for 1st argument
-        (mrmovq %rbx %rsi)   ; %rsi = data. THE LAST FOUR LINES COULD HAVE BEEN DONE IN A SINGLE LINE IS X86
-        (irmovq $4 %rdx)     ; Move 4 into %rdx
+        (mrmovq (%rbx) %rsi) ; %rsi = data. THE LAST FOUR LINES COULD HAVE BEEN DONE IN A SINGLE LINE IS X86
+        (irmovq 4 %rdx)      ; Move 4 into %rdx
         (addq %rdx %rbx)     ; Add 4 to rsp+8 for 2nd argument
-        (mrmovq %rbx %rdi)   ; %rdi = count. AGAIN. INEFFICIENT IN X86 BUT NOT HERE
+        (mrmovq (%rbx) %rdi) ; %rdi = count. AGAIN. INEFFICIENT IN X86 BUT NOT HERE
         (rrmovq %rsi %rax)   ; %rax will be used as next. Starts at data
                 
         ; Outer loop
@@ -67,9 +67,9 @@
         (andq %rdi %rdi)     ; Equiv. to x86 "testl %rdi, %rdi". Compare to 0
         (jle end)            ; When %rdi is zero or less, jump to the end
                 
-        (irmovq $1 %rdx)     ; Move 1 into constant register (I'm using %rdx mostly for constants)
+        (irmovq 1 %rdx)      ; Move 1 into constant register (I'm using %rdx mostly for constants)
         (subq %rdx %rdi)     ; count-- (To stop outer loop)
-        (irmovq $4 %rdx)     ; Returns %rdx to 4 (used more often)
+        (irmovq 4 %rdx)      ; Returns %rdx to 4 (used more often)
         (addq %rdx %rax)     ; next++, where next is an int pointer
                 
         (pushq %rax)         ; Store %rax that will be overriden by inner loop
@@ -84,17 +84,17 @@
                 
         (rrmovq %rax %rdi)   ; Copy i into rdi again
         (addq %rdx %rdi)     ; Compute address (data+i+1)
-        (mrmovq %rax %rbx)   ; rbx = data[i]
-        (mrmovq %rdi %rcx)   ; rcx = data[i+1]
+        (mrmovq (%rax) %rbx) ; rbx = data[i]
+        (mrmovq (%rdi) %rcx) ; rcx = data[i+1]
         (subq %rbx %rcx)     ; data[i+1]-data[i] for compare
-        (mrmovq %rdi %rcx)   ; Restore rcx (DOES NOT CHANGE FLAGS)
+        (mrmovq (%rdi) %rcx) ; Restore rcx (DOES NOT CHANGE FLAGS)
         (cmovl %rbx %rdx)    ; Move data[i] into temp location %rdx if we have to switch
         (cmovl %rcx %rbx)    ; Move data[i+1] into rbx if we have to switch
         (cmovl %rdx %rcx)    ; Move data[i] to rcx if we have to switch
-        (rmmovq %rbx %rax)   ; Update value of data[i]
-        (rmmovq %rcx %rdi)   ; Update value of data[i+1]
+        (rmmovq %rbx (%rax)) ; Update value of data[i]
+        (rmmovq %rcx (%rdi)) ; Update value of data[i+1]
                 
-        (irmovq $4 %rdx)     ; Restore %rdx to 4
+        (irmovq 4 %rdx)      ; Restore %rdx to 4
                 
         (jmp in_loop)        ; Return to begining of inner loop
                 

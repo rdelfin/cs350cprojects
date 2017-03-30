@@ -3,16 +3,18 @@
 
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+#include <map>
 
+#include <instruction_definitions.h>
 #include <tree.h>
 
-typedef uint64_t y86addr_t;
 
 class instruction {
 public:
     instruction();
     instruction(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
+
+    void write_to_memory(std::map<y86addr_t, uint8_t> memMap, y86addr_t* addr);
 
     uint8_t len;
     uint8_t instr_code;
@@ -39,9 +41,7 @@ private:
     void parse_as_popq(node *);
     void parse_as_leave(node *);
     void parse_as_irmovq(node *, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
-
-    std::string read_register(node *);
-    std::string read_whitespace(node *);
+    void parse_as_iaddq(node*, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
 
     y86addr_t immediate_string_to_value(const std::string&,
                                         std::unordered_map<std::string, y86addr_t> labelmap,
