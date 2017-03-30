@@ -46,7 +46,7 @@ void node::print(int level) {
     std::stringstream indStream;
     std::string indentation;
     for(int i = 0; i < level; i++)
-        indStream.put('  ');
+        indStream << "  ";
     indentation = indStream.str();
 
     if(isLeaf) {

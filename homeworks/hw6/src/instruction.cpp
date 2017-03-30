@@ -321,7 +321,7 @@ y86addr_t instruction::immediate_string_to_value(const std::string& value,
         std::stringstream ss;
         for(const char* p = value.c_str(); *p != '\0'; p++) {
             if(*p == '#')
-                ss << "0x";
+                ss << "0";
             else
                 ss.put(*p);
         }

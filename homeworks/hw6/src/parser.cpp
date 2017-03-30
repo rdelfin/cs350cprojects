@@ -7,6 +7,7 @@
 #include <parsing_functions.h>
 
 #include <algorithm>
+#include <literal.h>
 
 parser::parser(node *n) : n(n) {
 
@@ -44,6 +45,11 @@ void parser::calculateLabels() {
             }
             labelmap[label->value] = address;
         }
+        // This is a literal. Parse accordingly
+        else if(isLiteral(*it)) {
+            literal l(*it);
+            address += l.getLen();
+        }
         // Otherwise, use instruction parsing
         else {
             instruction i(*it, std::unordered_map<std::string, y86addr_t>(), true);
@@ -64,6 +70,11 @@ void parser::parseBytes() {
         }
         // Ignore all labels on second pass
         else if(isLabel(*it)) {
+        }
+        // This is a literal. Parse accordingly
+        else if(isLiteral(*it)) {
+            literal l(*it);
+            l.write_to_memory(bytemap, &address);
         }
         // Otherwise, use instruction parsing
         else {
@@ -147,7 +158,7 @@ y86addr_t parser::num_string_to_value(const std::string& value) {
         std::stringstream ss;
         for(const char* p = value.c_str(); *p != '\0'; p++) {
             if(*p == '#')
-                ss << "0x";
+                ss << "0";
             else
                 ss.put(*p);
         }
