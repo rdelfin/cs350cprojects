@@ -10,6 +10,7 @@ set(SOURCE_FILES
         src/assembler.cpp
         src/instruction.cpp
         src/tree.cpp
+        src/parser.cpp
         )
 
 add_executable(hw6 ${SOURCE_FILES})

@@ -38,7 +38,6 @@ public:
     ~tree() { }
 
     void print();
-private:
     node root;
 };
 

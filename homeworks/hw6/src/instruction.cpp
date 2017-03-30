@@ -123,34 +123,46 @@ uint8_t instruction::reg_string_to_code(const std::string& str) {
         return (uint8_t)reg;
     }
 
+    std::string mutable_string = str;
+    std::transform(mutable_string.begin(), mutable_string.end(), mutable_string.begin(), ::tolower);
 
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-
-    if(instruction_maps::registers().count(str) == 0) {
-        throw "Unexpected instruction";
+    if(instruction_maps::registers().count(mutable_string) == 0) {
+        std::stringstream ss;
+        ss << "Unexpected register name " << mutable_string;
+        throw InvalidInstructionException(ss.str());
     }
 
     return instruction_maps::registers()[str];
 }
 
-uint8_t instruction::instr_string_to_size(const std::string& str) {
+uint8_t instruction::instr_string_to_size(const std::string& val) {
+    // Create a mutable copy
+    std::string str = val;
 
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
     if(instruction_maps::sizes().count(str) == 0) {
-        throw "Unexpected instruction";
+        std::stringstream ss;
+        ss << "Unexpected instruction name " << str;
+        throw InvalidInstructionException(ss.str());
     }
 
     return instruction_maps::sizes()[str];
 }
 
-uint8_t instruction::instr_string_to_code(const std::string& str) {
+uint8_t instruction::instr_string_to_code(const std::string& val) {
+    // Create a mutable copy
+    std::string str = val;
 
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
     if(instruction_maps::codes().count(str) == 0) {
-        throw "Unexpected instruction";
-    } return instruction_maps::codes()[str];
+        std::stringstream ss;
+        ss << "Unexpected instruction name " << str;
+        throw InvalidInstructionException(ss.str());
+    }
+
+    return instruction_maps::codes()[str];
 }
 
 /* Individual parsers for each instruction */

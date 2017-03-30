@@ -13,6 +13,12 @@ class instruction {
 public:
     instruction();
     instruction(node* n, const std::unordered_map<std::string, y86addr_t> labelmap, bool ignore_label_error);
+
+    uint8_t len;
+    uint8_t instr_code;
+    uint8_t r1;
+    uint8_t r2;
+    uint64_t value;
 private:
     void init(uint8_t len, uint8_t instr_code);
     uint8_t instr_string_to_code(const std::string& str);
@@ -40,13 +46,6 @@ private:
     y86addr_t immediate_string_to_value(const std::string&,
                                         std::unordered_map<std::string, y86addr_t> labelmap,
                                         bool ignore_label_error);
-
-
-    uint8_t len;
-    uint8_t instr_code;
-    uint8_t r1;
-    uint8_t r2;
-    uint64_t value;
 };
 
 class InvalidInstructionException {

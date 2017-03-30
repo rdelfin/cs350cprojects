@@ -45,7 +45,7 @@ public:
                 {"halt",   1},
                 {"nop",    1},
                 {"noop",   1},
-                {"rrmovl", 2},
+                {"rrmovq", 2},
                 {"cmovle", 2},
                 {"cmovl",  2},
                 {"cmove",  2},
@@ -100,7 +100,7 @@ public:
         return {
                 { "halt", HALT },
                 { "nop", NOP },
-                { "rrmovl", RRMOVL },
+                { "rrmovq", RRMOVL },
                 { "cmovle", CMOVLE },
                 { "cmovl", CMOVL },
                 { "cmove", CMOVE },
