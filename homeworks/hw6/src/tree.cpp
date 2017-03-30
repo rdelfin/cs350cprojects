@@ -38,26 +38,32 @@ node& node::operator=(const node& n) {
 }
 
 void node::print() {
-    print(0);
+    std::cout << printStr() << std::endl;
 }
 
+std::string node::printStr() {
+    return print(0);
+}
 
-void node::print(int level) {
+std::string node::print(int level) {
     std::stringstream indStream;
     std::string indentation;
+    std::stringstream out;
     for(int i = 0; i < level; i++)
         indStream << "  ";
     indentation = indStream.str();
 
     if(isLeaf) {
-        std::cout << indentation << value << std::endl;
+        out << indentation << value << "\n";
     } else {
-        std::cout << indentation << "(" << std::endl;
+        out << indentation << "(" << "\n";
         for(auto it = children.begin(); it != children.end(); ++it) {
-            (*it)->print(level + 1);
+            out << (*it)->print(level + 1);
         }
-        std::cout << indentation << ")" << std::endl;
+        out << indentation << ")" << "\n";
     }
+
+    return out.str();
 }
 
 node::~node() {

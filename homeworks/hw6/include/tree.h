@@ -26,9 +26,10 @@ public:
     std::string value;
 
     void print();
+    std::string printStr();
 
 private:
-    void print(int level);
+    std::string print(int level);
 };
 
 class tree {

@@ -29,11 +29,7 @@ int main(int argc, char* argv[]) {
     } catch(ParsingException p) {
         std::cerr << "There was an error parsing the file." << std::endl;
         std::cerr << "\t" << p.message << std::endl;
-        return -1;
-    } catch (InvalidInstructionException e) {
-        std::cerr << "Invalid instruction exception: \n" << e.message << std::endl;
-    } catch (InvalidLabelException e) {
-        std::cerr << "Invalid label exception: \n" << e.message << std::endl;
+        exit(-1);
     }
 
 }

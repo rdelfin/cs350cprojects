@@ -31,29 +31,47 @@ void parser::calculateLabels() {
     y86addr_t address = 0;
 
     for(auto it = n->children.begin(); it != n->children.end(); ++it) {
-        // If directive, parse through this class
-        if(isDirective(*it)) {
-            parseDirective(*it, &address);
-        }
-        // This is a label, add to label map
-        else if(isLabel(*it)) {
-            node* label = *it;
-            if(labelmap.count(label->value) != 0) {
-                std::stringstream ss;
-                ss << "Label " << label->value << " is redefined. This is undefined behaviour";
-                throw InvalidLabelException(ss.str());
+        try {
+            // If directive, parse through this class
+            if(isDirective(*it)) {
+                parseDirective(*it, &address);
             }
-            labelmap[label->value] = address;
-        }
-        // This is a literal. Parse accordingly
-        else if(isLiteral(*it)) {
-            literal l(*it);
-            address += l.getLen();
-        }
-        // Otherwise, use instruction parsing
-        else {
-            instruction i(*it, std::unordered_map<std::string, y86addr_t>(), true);
-            address += i.len;
+            // This is a label, add to label map
+            else if(isLabel(*it)) {
+                node* label = *it;
+                if(labelmap.count(label->value) != 0) {
+                    std::stringstream ss;
+                    ss << "Label " << label->value << " is redefined. This is undefined behaviour";
+                    throw InvalidLabelException(ss.str());
+                }
+                labelmap[label->value] = address;
+            }
+            // This is a literal. Parse accordingly
+            else if(isLiteral(*it)) {
+                literal l(*it);
+                address += l.getLen();
+            }
+            // Otherwise, use instruction parsing
+            else {
+                instruction i(*it, std::unordered_map<std::string, y86addr_t>(), true);
+                address += i.len;
+            }
+
+        } catch (InvalidInstructionException e) {
+            std::cerr << "Invalid instruction exception: \n" << e.message << std::endl;
+            std::cerr << "Instruction below:" << std::endl;
+            std::cerr << (*it)->printStr();
+            exit(-1);
+        } catch (InvalidLabelException e) {
+            std::cerr << "Invalid label exception: \n" << e.message << std::endl;
+            std::cerr << "Instruction below:" << std::endl;
+            std::cerr << (*it)->printStr();
+            exit(-1);
+        } catch (InvalidNumberException e) {
+            std::cerr << "There was an invalid number: \n" << e.message << std::endl;
+            std::cerr << "Instruction below: " << std::endl;
+            std::cerr << (*it)->printStr();
+            exit(-1);
         }
     }
 }
