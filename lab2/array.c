@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 array_t* array_init(y86addr_t init_size) {
-    array_t* result = malloc(sizeof(array));
+    array_t* result = malloc(sizeof(array_t));
 
     result->length = init_size;
     result->mem = (init_size == 0 ?  NULL : malloc(init_size * sizeof(uint8_t)));
@@ -30,7 +30,7 @@ int array_set(array_t* arr, y86addr_t address, uint8_t value) {
         if(old_len == 0)
             arr->mem = malloc(address+1);
         else
-            arr->mem = realloc(address+1);
+            arr->mem = realloc(arr->mem, address+1);
 
         if(!arr->mem)
             return -1;

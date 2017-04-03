@@ -8,7 +8,7 @@
 #include "defines.h"
 
 typedef struct {
-    uint32_t length;
+    uint64_t length;
     uint8_t* mem;
 } array_t;
 

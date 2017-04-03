@@ -10,7 +10,7 @@
 
 state_t* state_init() {
     state_t* result = malloc(sizeof(state_t));
-    result->memory = array_init();
+    result->memory = array_init(0);
     result->cc[0] = result->cc[1] = result->cc[2] = 0;
     for(int i = 0; i < NUM_REGISTERS; i++, result->registers[i] = 0);
     result->pc = 0;
