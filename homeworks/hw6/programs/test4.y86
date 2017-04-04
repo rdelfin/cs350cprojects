@@ -1,0 +1,23 @@
+(
+    (pos 0)
+    (irmovq Stack %rbp)
+    (irmovq Stack %rsp)
+    (call Main)
+    (halt)
+
+    Main
+    (pushq %rbp)            ; Push old value of rbp
+    (rrmovq %rsp %rbp)      ; Move rbp to the end of the stack (at the old value of rbp)
+
+    (irmovq 15 %rsi)
+    (rrmovq %rsi %rdi)
+
+    (rrmovq %rbp %rsp)   ; Move rsp back to top
+    (popq %rbp)          ; Pop old rbp value
+    (ret)                ; Return to main
+
+
+
+    (pos #x300)
+    Stack
+)

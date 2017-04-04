@@ -10,7 +10,6 @@
 
 int main(int argc, char* argv[]) {
     std::string fileContent = get_content(argc, argv);
-    std::string sample_instruction = "(rrmovq %rbx %rcx)";
 
     try {
         tree t(fileContent);

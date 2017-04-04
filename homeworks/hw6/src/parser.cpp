@@ -180,13 +180,16 @@ y86addr_t parser::num_string_to_value(const std::string& value) {
             else
                 ss.put(*p);
         }
-        val = (y86addr_t)strtol(ss.str().c_str(), nullptr, 0);
+        std::string ss_str = ss.str();
+        val = (y86addr_t)strtol(ss_str.c_str(), nullptr, 0);
     }
     else {
         std::stringstream ss;
         ss << "Invalid number format: " << value;
         throw InvalidNumberException(ss.str());
     }
+
+    return val;
 }
 
 parser::~parser() {
