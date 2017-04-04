@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
         std::map<y86addr_t, uint8_t> memory = p.getMemMap();
         std::cout << "(" << std::endl;
         for(auto it = memory.begin(); it != memory.end(); ++it) {
-            std::cout << "\t(0x" << std::hex << it->first << ", 0x" << (uint64_t)it->second << std::dec << ")" << std::endl;
+            std::cout << "\t(" << it->first << " . " << (uint64_t)it->second << ")" << std::endl;
         }
 
         std::cout << ")" << std::endl;
