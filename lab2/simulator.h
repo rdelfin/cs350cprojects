@@ -24,6 +24,7 @@ int instruction_to_struct(state_t* state, instruction_t* instr);
 int execute_halt(state_t* state, instruction_t instr);
 int execute_nop(state_t* state, instruction_t instr);
 int execute_rrmovq(state_t* state, instruction_t instr);
+int execute_irmovq(state_t* state, instruction_t instr);
 int execute_rmmovq(state_t* state, instruction_t instr);
 int execute_mrmovq(state_t* state, instruction_t instr);
 int execute_opq(state_t* state, instruction_t instr);

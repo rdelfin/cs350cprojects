@@ -90,11 +90,10 @@ int state_read_instruction_byte(state_t* state, uint8_t* value) {
 }
 
 int state_read_instruction_word(state_t* state, y86addr_t* value) {
-    uint8_t bytes[8];
+    uint8_t* bytes = (uint8_t*) value;
     for(int i = 0; i < 8; i++) {
         if(state_read_instruction_byte(state, &bytes[i]))
             return -1;
-        state_incr_pc(state, 1);
     }
 
     return 0;
@@ -146,7 +145,7 @@ void state_print(state_t* state, FILE* f) {
     }
 }
 
-state_t* state_destroy(state_t* state) {
+void state_destroy(state_t* state) {
     array_destroy(state->memory);
     free(state);
 }

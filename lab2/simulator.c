@@ -32,6 +32,9 @@ int execute_next_instruction(state_t* state) {
         case CMOVG:
             return execute_rrmovq(state, instr);
 
+        case IRMOVQ:
+            return execute_irmovq(state, instr);
+
         case RMMOVQ:
             return execute_rmmovq(state, instr);
 
@@ -64,8 +67,10 @@ int execute_next_instruction(state_t* state) {
 
         case POPQ:
             return execute_popq(state, instr);
+
         case IADDQ:
             return execute_iaddq(state, instr);
+
         default:
             state_set_stat(state, STAT_INS);
             return 0;
@@ -132,10 +137,10 @@ int instruction_to_struct(state_t* state, instruction_t* instr) {
         case RMMOVQ:
         case MRMOVQ:
             // These instruction read in both a value and registers
-            if(state_read_instruction_word(state, &val))
-                return -3;
             if(state_read_instruction_byte(state, &reg))
                 return -2;
+            if(state_read_instruction_word(state, &val))
+                return -3;
             instr->r1 = (reg >> 4) & (uint8_t)0x0F;
             instr->r2 = reg & (uint8_t)0x0F;
             instr->val = val;
@@ -180,6 +185,18 @@ int execute_rrmovq(state_t* state, instruction_t instr) {
         if(!state_write_reg(state, instr.r2, r1val))
             return -1;
     }
+
+    return 0;
+}
+
+int execute_irmovq(state_t* state, instruction_t instr) {
+    if(instr.r1 != REG_NONE || instr.r2 == REG_NONE) {
+        state_set_stat(state, STAT_INS);
+        return 0;
+    }
+
+    if(state_write_reg(state, instr.r2, instr.val))
+        return -1;
 
     return 0;
 }

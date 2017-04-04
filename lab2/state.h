@@ -43,6 +43,6 @@ void state_get_cc(state_t* state, uint8_t* of, uint8_t* zf, uint8_t* sf);
 
 void state_print(state_t* state, FILE* f);
 
-state_t* state_destroy(state_t* state);
+void state_destroy(state_t* state);
 
 #endif
