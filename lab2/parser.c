@@ -17,7 +17,7 @@ state_t* parse(char * file_name) {
     state_t* state = state_init();
 
     if(state == NULL) {
-        fprintf(stderr, "There was an error creating the state.");
+        fprintf(stderr, "There was an error creating the state.\n");
         return NULL;
     }
 
@@ -32,7 +32,7 @@ state_t* parse(char * file_name) {
             if (c == '(') {
                 parenthesis_lvl++;
                 if(parenthesis_lvl > 2) {
-                    fprintf(stderr, "There was an error parsing the file. There can only be two levels of parenthesis");
+                    fprintf(stderr, "There was an error parsing the file. There can only be two levels of parenthesis\n");
                     state_destroy(state);
                     return NULL;
                 }
@@ -47,17 +47,19 @@ state_t* parse(char * file_name) {
                     }
 
                     if(state_write_memory(state, address, value)) {
-                        fprintf(stderr, "There was an unknown error writting to the state memory.");
+                        fprintf(stderr, "There was an unknown error writing to the state memory.\n");
                         state_destroy(state);
                         return NULL;
                     }
+
+                    state_write_memory(state, address, value);
                 }
             }
 
             else if(c == ')') {
                 parenthesis_lvl--;
                 if(parenthesis_lvl < 0) {
-                    fprintf(stderr, "There was an error parsing the file. You have too many closing parenthesis");
+                    fprintf(stderr, "There was an error parsing the file. You have too many closing parenthesis.\n");
                     state_destroy(state);
                     return NULL;
                 }
@@ -71,7 +73,7 @@ state_t* parse(char * file_name) {
             }
 
             else {
-                fprintf(stderr, "There was an invalid token when parsing the file.");
+                fprintf(stderr, "There was an invalid token when parsing the file.\n");
                 state_destroy(state);
                 return NULL;
             }
@@ -83,7 +85,7 @@ state_t* parse(char * file_name) {
     }
 
     if(parenthesis_lvl != 0) {
-        fprintf(stderr, "There were unmatched parenthesis. The file for any missing closng parenthesis.");
+        fprintf(stderr, "There were unmatched parenthesis. The file for any missing closng parenthesis.\n");
         state_destroy(state);
         return NULL;
     }
@@ -93,7 +95,7 @@ state_t* parse(char * file_name) {
 
 int parse_memory_addr(FILE* f, y86addr_t* addr, uint8_t* value) {
     if((char)fgetc(f) != '(') {
-        fprintf(stderr, "Expected an opening parenthesis.");
+        fprintf(stderr, "Expected an opening parenthesis.\n");
         return -1;
     }
     char addr_buff[32], middle_buff[32], data_buff[32];
@@ -103,29 +105,29 @@ int parse_memory_addr(FILE* f, y86addr_t* addr, uint8_t* value) {
     parse_skip_whitespace(f);
     parse_token(f, middle_buff, 32);
     parse_skip_whitespace(f);
-    parse_token(f, middle_buff, 32);
+    parse_token(f, data_buff, 32);
     parse_skip_whitespace(f);
     char endParenthesis = (char)fgetc(f);
 
     if(endParenthesis != ')') {
-        fprintf(stderr, "Expected a closing parenthesis.");
+        fprintf(stderr, "Expected a closing parenthesis.\n");
         return -1;
     }
 
     if(strcmp(middle_buff, ".") != 0) {
-        fprintf(stderr, "Expected middle token of ( %s %s %s ) to be '.'", addr_buff, middle_buff, data_buff);
+        fprintf(stderr, "Expected middle token of ( %s %s %s ) to be '.'\n", addr_buff, middle_buff, data_buff);
         return -2;
     }
 
     uint64_t tempVal;
     y86addr_t tempAddr;
-    if(!my_strtol(addr_buff, &tempAddr)) {
-        fprintf(stderr, "there was an error parsing an address. \"%s\" is not a valid number.", addr_buff);
+    if(my_strtol(addr_buff, &tempAddr)) {
+        fprintf(stderr, "there was an error parsing an address. \"%s\" is not a valid number.\n", addr_buff);
         return -3;
     }
 
-    if(!my_strtol(data_buff, &tempVal)) {
-        fprintf(stderr, "there was an error parsing a memory value. \"%s\" is not a valid number.", data_buff);
+    if(my_strtol(data_buff, &tempVal)) {
+        fprintf(stderr, "there was an error parsing a memory value. \"%s\" is not a valid number.\n", data_buff);
         return -3;
     }
 
@@ -139,10 +141,15 @@ int parse_memory_addr(FILE* f, y86addr_t* addr, uint8_t* value) {
 
 int parse_token(FILE* f, char* buffer, int buffer_size) {
     char c = (char)fgetc(f);
+    int i = 0;
     while(c != EOF && c != ' ' && c != ')' && c != ';') {
-        *(buffer++) = c;
+        i++;
+        if(i < buffer_size)
+            *(buffer++) = c;
         c = (char)fgetc(f);
     }
+
+    *buffer = '\0';
 
     fseek(f, -1, SEEK_CUR);
     return 0;

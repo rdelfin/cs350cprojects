@@ -37,6 +37,14 @@ int array_get(array_t* arr, y86addr_t address, uint8_t* value);
  */
 int array_set(array_t* arr, y86addr_t address, uint8_t value);
 
+
+/**
+ * Gets the length currently allocated to the array
+ * @param arr Array to get length off
+ * @return Length
+ */
+y86addr_t array_size(array_t* arr);
+
 /**
  * Free all the memory used by a given array
  * @param arr The array to free

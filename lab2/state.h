@@ -5,6 +5,7 @@
 #ifndef LAB2_STATE_H
 #define LAB2_STATE_H
 
+#include <stdio.h>
 #include "array.h"
 #include "defines.h"
 
@@ -33,6 +34,8 @@ void state_get_stat(state_t* state, y86addr_t* value);
 
 void state_set_cc(state_t* state, uint8_t of, uint8_t zf, uint8_t sf);
 void state_get_cc(state_t* state, uint8_t* of, uint8_t* zf, uint8_t* sf);
+
+void state_print(state_t* state, FILE* f);
 
 state_t* state_destroy(state_t* state);
 

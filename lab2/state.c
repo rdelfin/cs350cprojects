@@ -55,7 +55,7 @@ void state_set_stat(state_t* state, y86addr_t value) {
 }
 
 void state_get_stat(state_t* state, y86addr_t* value) {
-    state->stat = value;
+    *value = state->stat;
 }
 
 void state_set_cc(state_t* state, uint8_t of, uint8_t zf, uint8_t sf) {
@@ -68,6 +68,30 @@ void state_get_cc(state_t* state, uint8_t* of, uint8_t* zf, uint8_t* sf) {
     *of = state->cc[0];
     *zf = state->cc[1];
     *sf = state->cc[2];
+}
+
+void state_print(state_t* state, FILE* f) {
+    fprintf(f, "Registers\n====================================================\n");
+    fprintf(f, "%%rax: 0x%016lx\t%%rcx: 0x%016lx\n", state->registers[RAX], state->registers[RCX]);
+    fprintf(f, "%%rdx: 0x%016lx\t%%rbx: 0x%016lx\n", state->registers[RDX], state->registers[RBX]);
+    fprintf(f, "%%rsp: 0x%016lx\t%%rbp: 0x%016lx\n", state->registers[RSP], state->registers[RBP]);
+    fprintf(f, "%%rsi: 0x%016lx\t%%rdi: 0x%016lx\n", state->registers[RSI], state->registers[RDI]);
+    fprintf(f, "%%r8:  0x%016lx\t%%r9:  0x%016lx\n", state->registers[R8], state->registers[R9]);
+    fprintf(f, "%%r10: 0x%016lx\t%%r11: 0x%016lx\n", state->registers[R10], state->registers[R11]);
+    fprintf(f, "%%r12: 0x%016lx\t%%r13: 0x%016lx\n", state->registers[R12], state->registers[R13]);
+    fprintf(f, "%%r14: 0x%016lx\n", state->registers[R14]);
+
+    fprintf(f, "\nProgram Counter: 0x%016lx\n", state->pc);
+    fprintf(f, "Status Code: 0x%016lx\n", state->stat);
+    fprintf(f, "Condition Code:\n");
+    fprintf(f, "\tOF: %d\tZF: %d\tSF: %d\n", state->cc[0], state->cc[1], state->cc[2]);
+
+
+    y86addr_t memlen = array_size(state->memory);
+    fprintf(f, "\nMemory (%d bytes)\n==============================================\n", memlen);
+    for(y86addr_t i = 0; i < memlen; i++) {
+        fprintf(f, " 0x%08lx: 0x%02x\n", i, state->memory[i]);
+    }
 }
 
 state_t* state_destroy(state_t* state) {

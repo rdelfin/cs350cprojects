@@ -28,9 +28,11 @@ int array_set(array_t* arr, y86addr_t address, uint8_t value) {
     if(arr->length <= address) {
         y86addr_t old_len = arr->length;
         if(old_len == 0)
-            arr->mem = malloc(address+1);
+            arr->mem = malloc((address+1) * sizeof(uint8_t));
         else
-            arr->mem = realloc(arr->mem, address+1);
+            arr->mem = realloc(arr->mem, (address+1) * sizeof(uint8_t));
+
+        arr->length = address+1;
 
         if(!arr->mem)
             return -1;
@@ -42,6 +44,10 @@ int array_set(array_t* arr, y86addr_t address, uint8_t value) {
 
     arr->mem[address] = value;
     return 0;
+}
+
+y86addr_t array_size(array_t* arr) {
+    return arr->length;
 }
 
 void array_destroy(array_t* arr) {
