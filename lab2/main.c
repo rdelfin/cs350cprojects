@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include "parser.h"
-
+#include "simulator.h"
 
 
 int main(int argc, char* argv[]) {
@@ -17,8 +17,17 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    state_t* initial_state = parse(argv[1]);
-    state_print(initial_state, stdout);
+    state_t* state = parse(argv[1]);
+    state_print(state, stdout);
+
+    y86addr_t stat;
+    state_get_stat(state, &stat);
+
+    while(stat == STAT_AOK) {
+        execute_next_instruction(state);
+
+        state_get_stat(state, &stat);
+    }
 
     return 0;
 }

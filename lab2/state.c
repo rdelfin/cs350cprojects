@@ -14,7 +14,9 @@ state_t* state_init() {
     result->cc[0] = result->cc[1] = result->cc[2] = 0;
     for(int i = 0; i < NUM_REGISTERS; i++, result->registers[i] = 0);
     result->pc = 0;
-    result->stat = 0;
+    result->stat = STAT_AOK;
+
+    return result;
 }
 
 int state_write_memory(state_t* state, y86addr_t addr, uint8_t value) {
@@ -32,6 +34,8 @@ int state_write_reg(state_t* state, uint8_t reg, y86addr_t value) {
         return -1;
 
     state->registers[reg] = value;
+
+    return 0;
 }
 
 int state_read_reg(state_t* state, uint8_t reg, y86addr_t* value) {
@@ -39,15 +43,61 @@ int state_read_reg(state_t* state, uint8_t reg, y86addr_t* value) {
         return -1;
 
     *value = state->registers[reg];
+
+    return 0;
 }
+
+
+int state_write_memory_word(state_t* state, y86addr_t addr, y86addr_t value) {
+    uint8_t* val_ptr = (uint8_t*)&value;
+
+    for(int i = 0; i < 8; i++)
+        if(state_write_memory(state, addr + i, *(val_ptr + i)))
+            return -1;
+}
+
+int state_read_memory_word(state_t* state, y86addr_t addr, y86addr_t* value) {
+    uint8_t* val_ptr = (uint8_t*)value;
+
+    for(int i = 0; i < 8; i++)
+        if(state_read_memory(state, addr + i, val_ptr + i))
+            return -1;
+}
+
 
 void state_incr_pc(state_t* state, int steps) {
-    state->pc++;
+    state->pc+= steps;
 }
 
-void state_set_pc(state_t* state, int steps) {
-    state->pc = steps;
+void state_set_pc(state_t* state, y86addr_t val) {
+    state->pc = val;
 
+}
+
+
+void state_get_pc(state_t* state, y86addr_t* val) {
+    *val = state->pc;
+}
+
+int state_read_instruction_byte(state_t* state, uint8_t* value) {
+    uint8_t byte;
+    if(array_get(state->memory, state->pc, &byte))
+        return -1;
+
+    *value = byte;
+    state_incr_pc(state, 1);
+    return 0;
+}
+
+int state_read_instruction_word(state_t* state, y86addr_t* value) {
+    uint8_t bytes[8];
+    for(int i = 0; i < 8; i++) {
+        if(state_read_instruction_byte(state, &bytes[i]))
+            return -1;
+        state_incr_pc(state, 1);
+    }
+
+    return 0;
 }
 
 void state_set_stat(state_t* state, y86addr_t value) {
@@ -59,15 +109,15 @@ void state_get_stat(state_t* state, y86addr_t* value) {
 }
 
 void state_set_cc(state_t* state, uint8_t of, uint8_t zf, uint8_t sf) {
-    state->cc[0] = of ? 1 : 0;
-    state->cc[1] = zf ? 1 : 0;
-    state->cc[2] = sf ? 1 : 0;
+    state->cc[OF_IDX] = (uint8_t)(of ? 1 : 0);
+    state->cc[ZF_IDX] = (uint8_t)(zf ? 1 : 0);
+    state->cc[SF_IDX] = (uint8_t)(sf ? 1 : 0);
 }
 
 void state_get_cc(state_t* state, uint8_t* of, uint8_t* zf, uint8_t* sf) {
-    *of = state->cc[0];
-    *zf = state->cc[1];
-    *sf = state->cc[2];
+    *of = state->cc[OF_IDX];
+    *zf = state->cc[ZF_IDX];
+    *sf = state->cc[SF_IDX];
 }
 
 void state_print(state_t* state, FILE* f) {
@@ -84,13 +134,15 @@ void state_print(state_t* state, FILE* f) {
     fprintf(f, "\nProgram Counter: 0x%016lx\n", state->pc);
     fprintf(f, "Status Code: 0x%016lx\n", state->stat);
     fprintf(f, "Condition Code:\n");
-    fprintf(f, "\tOF: %d\tZF: %d\tSF: %d\n", state->cc[0], state->cc[1], state->cc[2]);
+    fprintf(f, "\tOF: %d\tZF: %d\tSF: %d\n", state->cc[OF_IDX], state->cc[ZF_IDX], state->cc[SF_IDX]);
 
 
     y86addr_t memlen = array_size(state->memory);
-    fprintf(f, "\nMemory (%d bytes)\n==============================================\n", memlen);
+    fprintf(f, "\nMemory (%lu bytes)\n==============================================\n", memlen);
     for(y86addr_t i = 0; i < memlen; i++) {
-        fprintf(f, " 0x%08lx: 0x%02x\n", i, state->memory[i]);
+        uint8_t val;
+        state_read_memory(state, i, &val);
+        fprintf(f, " 0x%08lx: 0x%02x\n", i, (unsigned)val);
     }
 }
 

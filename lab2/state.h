@@ -23,11 +23,17 @@ state_t* state_init();
 int state_write_memory(state_t* state, y86addr_t addr, uint8_t value);
 int state_read_memory(state_t* state, y86addr_t addr, uint8_t* value);
 
+int state_write_memory_word(state_t* state, y86addr_t addr, y86addr_t value);
+int state_read_memory_word(state_t* state, y86addr_t addr, y86addr_t* value);
+
 int state_write_reg(state_t* state, uint8_t reg, y86addr_t value);
 int state_read_reg(state_t* state, uint8_t reg, y86addr_t* value);
 
 void state_incr_pc(state_t* state, int steps);
-void state_set_pc(state_t* state, int steps);
+void state_set_pc(state_t* state, y86addr_t val);
+void state_get_pc(state_t* state, y86addr_t* val);
+int state_read_instruction_byte(state_t* state, uint8_t* value);
+int state_read_instruction_word(state_t* state, y86addr_t* value);
 
 void state_set_stat(state_t* state, y86addr_t value);
 void state_get_stat(state_t* state, y86addr_t* value);
