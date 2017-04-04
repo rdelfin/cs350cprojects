@@ -1,0 +1,30 @@
+(
+    ; Setup the stack
+    (irmovq stack %rbp)
+    (irmovq stack %rsp)
+    (irmovq data %rdi)             ; Pointer to array. Parameter to quicksort
+    (irmovq 0 %rsi)                ; Start index of the quicksort subproblem (inclusive)
+    (irmovq 10 %rdx)               ; End index of the quicksort subproblem (exclusive)
+    (call quicksort)               ; Call quicksort(data, 0, 10)
+    (halt)
+
+    quicksort                   ; Called as quicksort(data, min, max)
+    (pushq %rbp)
+    (rrmovq %rsp %rbp)         ; Setup the stack, push old value of rbp onto the stack and move rbp up to rsp
+
+    ; Calculate the pivot index at data+(m
+
+
+    quicksort_ret
+    (rrmovq %rbp %rsp)     ; Move stack pointer back up
+    (popq %rbp)            ; Pop old rbp value
+    (ret)
+
+    ; Begin stack at 0x800, grows downwards
+    (pos #x800)
+    stack
+
+    (pos 4096)
+    data
+
+)

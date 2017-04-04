@@ -1,0 +1,38 @@
+(
+    ; Setup the stack
+    (irmovq stack %rbp)
+    (irmovq stack %rsp)
+    (irmovq 0 %rdi)             ; "low" parameter in fib
+    (irmovq 1 %rsi)             ; "high" parameter in fib
+    (irmovq 10 %rdx)            ; "steps" parameter in fib
+    (call fibonacci)
+    (halt)
+
+    fibonacci
+    (pushq %rbp)
+    (rrmovq %rsp %rbp)         ; Setup the stack, push old value of rbp onto the stack and move rbp up to rsp
+
+    (rrmovq %rdx %rcx)         ; Move %rdx temporarily to %rcx for comparison
+    (andq %rcx %rcx)           ; And %rcx with itself to set the zero flag
+    (jle fib_result)           ; If # of steps <= 0, jump to return
+
+    (rrmovq %rsi %rcx)         ; Move high -> temp
+    (addq %rdi %rsi)           ; Set high <- high + low
+    (rrmovq %rcx %rdi)         ; Set low <- high (aka temp)
+    (iaddl -1 %rdx)            ; Subtract one from "steps"
+    (call fibonacci)           ; fibonacci(high, high + low)
+
+    fib_ret
+    (rrmovq %rbp %rsp)     ; Move stack pointer back up
+    (popq %rbp)            ; Pop old rbp value
+    (ret)
+
+    fib_result
+    (rrmovq %rdi %rax)         ; In case $ of steps <= 0, just return low
+    (jmp fib_ret)              ; Jump back up to the return sequence
+
+
+    ; Begin stack at 0x800, grows downwards
+    (pos #x800)
+    stack
+)
