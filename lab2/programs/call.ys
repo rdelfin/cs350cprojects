@@ -1,0 +1,14 @@
+(
+    (pos #x0)
+    (irmovq stack %rsp)
+    (irmovq stack %rbp)
+    (call test)
+    (irmovq 4 %rax)
+    (halt)
+
+    test
+    (ret)
+
+    (pos 100)
+    stack
+)

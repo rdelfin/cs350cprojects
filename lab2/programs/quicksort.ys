@@ -76,8 +76,8 @@
     (pushq %r14)            ; Callee-saved register
 
     ; Get value of the pivot
-    (rrmovq %rdi, %r12)      ; %r12 = array + high
-    (addq %rdx, %r12)        ; %r12 = array + high
+    (rrmovq %rdi %r12)       ; %r12 = array + high
+    (addq %rdx %r12)         ; %r12 = array + high
     (mrmovq (%r12) %r13)     ; %r13 = *(array + high) gets value of pivot
                              ; %r13 will be referred to as pivot, %r12 as pivot_ptr
     ; Setup i_ptr and j_ptr
@@ -92,7 +92,7 @@
     (subq %r12 %r10)         ; &array[j] - &array[high]
     (jge part_last_swap)     ; j >= high => jump end
     (mrmovq (%r11) %r10)     ; %r10 = array[j]
-    (subl %r13 %r10)         ; array[pivot] - array[j]
+    (subq %r13 %r10)         ; array[pivot] - array[j]
     (jg part_no_swap)        ; Skip swap(array[i], array[j])
     (iaddq 1 %r14)           ; i++
     (pushq %rdi)             ; Save %rdi
@@ -108,8 +108,8 @@
 
     part_last_swap
     (iaddq 1 %r14)          ; i++
-    (push %rdi)             ; Save %rdi
-    (push %rsi)             ; Save %rsi
+    (pushq %rdi)             ; Save %rdi
+    (pushq %rsi)             ; Save %rsi
     (rrmovq %r14 %rdi)      ; parameter 1: &array[i]
     (rrmovq %r12 %rsi)      ; parameter 2: &array[pivot]
     (call swap)
@@ -154,5 +154,4 @@
 
     (pos 4096)
     data
-
 )

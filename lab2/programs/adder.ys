@@ -1,0 +1,7 @@
+(
+    (pos #x0)
+    (irmovq 5 %rax)
+    (irmovq 6 %rbx)
+    (addq %rbx %rax)
+    (halt)
+)

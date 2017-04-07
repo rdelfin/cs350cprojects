@@ -32,7 +32,7 @@
     (jmp fib_ret)              ; Jump back up to the return sequence
 
 
-    ; Begin stack at 0x800, grows downwards
-    (pos #x800)
+    ; Begin stack at 800, grows downwards
+    (pos 800)
     stack
 )
