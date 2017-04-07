@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     }
 
     if(access(argv[1], F_OK) == -1) {
-        fprintf(stderr, "The file provided does not exist. Try with a different file.");
+        fprintf(stderr, "The file provided does not exist. Try with a different file.\n");
         return -1;
     }
 

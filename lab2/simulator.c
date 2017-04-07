@@ -179,10 +179,10 @@ int execute_rrmovq(state_t* state, instruction_t instr) {
     uint8_t cond_val = condition_eval(state, condition);
     if(cond_val) {
         y86addr_t r1val;
-        if(!state_read_reg(state, instr.r1, &r1val))
+        if(state_read_reg(state, instr.r1, &r1val))
             return -1;
 
-        if(!state_write_reg(state, instr.r2, r1val))
+        if(state_write_reg(state, instr.r2, r1val))
             return -1;
     }
 
@@ -326,7 +326,7 @@ int execute_ret(state_t* state, instruction_t instr) {
         return -1;
     if(state_read_memory_word(state, rspval, &retval))
         return -1;
-    if(state_write_reg(state, RSP, rspval + 4))
+    if(state_write_reg(state, RSP, rspval + 8))
         return -1;
     state_set_pc(state, retval);
 
@@ -394,7 +394,7 @@ int execute_iaddq(state_t* state, instruction_t instr) {
     sf = (uint8_t) (((int64_t)result) < 0);
     state_set_cc(state, of, zf, sf);
 
-    if(state_write_reg(state, instr.r1, result))
+    if(state_write_reg(state, instr.r2, result))
         return -1;
 
     return 0;
