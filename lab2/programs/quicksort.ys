@@ -1,4 +1,5 @@
 (
+    (pos 0)
     ; Setup the stack
     (irmovq stack %rbp)
     (irmovq stack %rsp)
