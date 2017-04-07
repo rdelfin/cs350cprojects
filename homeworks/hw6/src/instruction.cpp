@@ -96,7 +96,7 @@ void instruction::write_to_memory(std::map<y86addr_t, uint8_t>& memMap, y86addr_
     uint8_t bytes[10];
     // Special case for call and jmp
     if(instr_code == CALL || instr_code == JMP || instr_code == JLE || instr_code == JL || instr_code == JE ||
-       instr_code == JNE  || instr_code == JG) {
+       instr_code == JNE  || instr_code == JG  || instr_code == JGE) {
         bytes[0] = instr_code;
         // ASSUMPTION: This is a little endian machine
         y86addr_t* val_ptr = (y86addr_t*)(bytes + 1);
