@@ -1,0 +1,174 @@
+(
+    (pos 0)
+    ; Setup the stack
+    (irmovq stack %rbp)
+    (irmovq stack %rsp)
+    (irmovq data %rdi)             ; Pointer to array. Parameter to quicksort
+    (irmovq 0 %rsi)                ; Start index of the quicksort subproblem (inclusive)
+    (irmovq 9 %rdx)                ; End index of the quicksort subproblem (exclusive)
+    (call quicksort)               ; Call quicksort(data, 0, 10)
+    (halt)
+
+    ; void quicksort(uint64_t* data, uint64_t low, uint64_t high)
+    ; Sorts the list data. min and max are the two indices that bound the sorting (inclusive). In other words, the
+    ; algorithm will only sort the values data[i] s.t. min <= i <= max
+    ; Registers:
+    ;   data := %rdi
+    ;   low  := %rsi
+    ;   high := %rdx
+    quicksort
+    (pushq %rbp)
+    (rrmovq %rsp %rbp)         ; Setup the stack, push old value of rbp onto the stack and move rbp up to rsp
+    (pushq %r9)                ; Callee-saved register
+
+    (rrmovq %rsi %r9)          ; low temporarily into %r9
+    (subq %rdx %r9)            ; low - high
+    (jge quicksort_ret)        ; low >= high => return
+
+    ; Partitioning
+    (pushq %rdi)               ; Caller-saved register
+    (pushq %rsi)               ; Caller-saved register
+    (pushq %rdx)               ; Caller-saved register
+    (call partition)           ; Call partition with same parameters
+    (popq %rdi)                ; Caller-saved register
+    (popq %rsi)                ; Caller-saved register
+    (popq %rdx)                ; Caller-saved register
+    (rrmovq %rax %r9)          ; %r9 = pivot index
+
+    ; Recursive quick sort calls
+    ; Call 1: quicksort(array, low, pivot)
+    (pushq %rdi)               ; Caller-saved register
+    (pushq %rsi)               ; Caller-saved register
+    (pushq %rdx)               ; Caller-saved register
+    (rrmovq %r9 %rdx)          ; 3rd parameter = pivot
+    (call quicksort)           ; quicksort(array, low, pivot)
+    (popq %rdx)                ; Caller-saved register restore
+    (popq %rsi)                ; Caller-saved register restore
+    (popq %rdi)                ; Caller-saved register restore
+
+    ; Last call, do not bother saving registers
+    (rrmovq %r9 %rsi)          ; 2nd parameter = pivot + 1
+    (iaddq 1 %rsi)             ; The + 1
+    (call quicksort)           ; quicksort(array, low, pivot)
+
+    quicksort_ret
+    (popq %r9)             ; Callee-saved register
+    (rrmovq %rbp %rsp)     ; Move stack pointer back up
+    (popq %rbp)            ; Pop old rbp value
+    (ret)
+
+
+    ; uint64_t partition(uint64_t* array, int64_t low, int64_t high)
+    ; Partitions the array, between indices low and high (inclusive).
+    ; Values stored in registers:
+    ;   array := %rdi
+    ;   low   := %rsi
+    ;   high  := %rdx
+    ; Referenced from the Lomuto partition scheme (https://en.wikipedia.org/wiki/Quicksort#Lomuto_partition_scheme)
+    partition
+    (pushq %rbp)            ; Setup stack
+    (rrmovq %rsp %rbp)      ; Setup stack
+    (pushq %r9)             ; Callee-saved register
+    (pushq %r10)            ; Callee-saved register
+    (pushq %r11)            ; Callee-saved register
+    (pushq %r12)            ; Callee-saved register
+    (pushq %r13)            ; Callee-saved register
+    (pushq %r14)            ; Callee-saved register
+
+    ; Get value of the pivot
+    (rrmovq %rdi %r12)       ; %r12 = array + high
+                             ; %r12 = array + high (add 8 times for qword)
+    (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12)
+    (mrmovq (%r12) %r13)     ; %r13 = *(array + high) gets value of pivot
+                             ; %r13 will be referred to as pivot, %r12 as pivot_ptr
+    ; Setup i_ptr and j_ptr
+    (rrmovq %rsi %r14)       ; Setup i in %r14
+    (rrmovq %rsi %r11)       ; Setup j in %r11
+    (iaddq -1 %r14)          ; i = lo - 1
+    (addq %r14 %r14)         ; %r14*2
+    (addq %r14 %r14)         ; %r14*4
+    (addq %r14 %r14)         ; %r14*8
+    (addq %r11 %r11)         ; %r14*2
+    (addq %r11 %r11)         ; %r14*4
+    (addq %r11 %r11)         ; %r14*8
+    (addq %rdi %r14)         ; i_ptr = &array[i]
+    (addq %rdi %r11)         ; i_ptr = &array[j]
+
+    partition_loop
+    (rrmovq %r11 %r10)       ; Copy &array[j] to %r10
+    (subq %r12 %r10)         ; &array[j] - &array[high]
+    (jge part_last_swap)     ; j >= high => jump end
+    (mrmovq (%r11) %r10)     ; %r10 = array[j]
+    (subq %r13 %r10)         ; array[pivot] - array[j]
+    (jg part_no_swap)        ; Skip swap(array[i], array[j])
+    (iaddq 8 %r14)           ; i++
+    (pushq %rdi)             ; Save %rdi
+    (pushq %rsi)             ; Save %rsi
+    (rrmovq %r14 %rdi)       ; parameter 1: &array[i]
+    (rrmovq %r11 %rsi)       ; parameter 2: &array[j]
+    (call swap)
+    (popq %rsi)              ; Restore %rsi
+    (popq %rdi)              ; Restore %rdi
+    part_no_swap
+    (iaddq 8 %r11)           ; j++
+    (jmp partition_loop)     ; Return to top of loop
+
+    part_last_swap
+    (iaddq 1 %r14)          ; i++
+    (pushq %rdi)             ; Save %rdi
+    (pushq %rsi)             ; Save %rsi
+    (rrmovq %r14 %rdi)      ; parameter 1: &array[i]
+    (rrmovq %r12 %rsi)      ; parameter 2: &array[pivot]
+    (call swap)
+    (popq %rsi)             ; Restore %rsi
+    (popq %rdi)             ; Restore %rdi
+    (rrmovq %r14 %rax)      ; %rax = &array[i]
+    (subq %rdi %rax)        ; Return i (&array[i] - array)
+
+    (popq %r14)             ; Callee-saved register restore
+    (popq %r13)             ; Callee-saved register restore
+    (popq %r12)             ; Callee-saved register restore
+    (popq %r11)             ; Callee-saved register restore
+    (popq %r10)             ; Callee-saved register restore
+    (popq %r9)              ; Callee-saved register restore
+    (rrmovq %rbp %rsp)      ; Tear down stack
+    (popq %rbp)             ; Tear down stack
+    (ret)
+
+
+    ; void swap(uint64_t* a, uint64_t* b), swaps the values at the memory locations of a and b
+    ; a = %rdi and b = %rsi
+    swap
+    (pushq %rbp)            ; Set up stack
+    (rrmovq %rsp %rbp)      ; Set up stack
+    (pushq %rbx)            ; Callee-saved register saved
+    (pushq %rcx)            ; Callee-saved register saved
+
+    (mrmovq (%rdi) %rbx)    ; aVal = *a
+    (mrmovq (%rsi) %rcx)    ; bVal = *b
+    (rmmovq %rcx (%rdi))    ; *a = bVal
+    (rmmovq %rbx (%rsi))    ; *b = aVal
+
+    (popq %rcx)             ; Callee-saved register restored
+    (popq %rbx)             ; Callee-saved register restored
+    (rrmovq %rbp %rsp)      ; Tear down stack
+    (popq %rbp)             ; Tear down stack
+    (ret)
+
+    ; Begin stack at 0x800, grows downwards
+    (pos #x800)
+    stack
+
+    (pos 4096)
+    data
+    (qword #x5)
+    (qword #x8)
+    (qword #x9)
+    (qword #x2)
+    (qword #x3)
+    (qword #xA)
+    (qword #x4)
+    (qword #x7)
+    (qword #x1)
+    (qword #x9)
+)

@@ -225,18 +225,18 @@ void instruction::parse_as_mrmovq(node* n, const std::unordered_map<std::string,
         throw InvalidInstructionException("mrmovq requires exactly 2 arguments");
 
     bool has_offset = n->children.size() == 4;
-    int r1_idx = has_offset ? 2 : 1;
-    int r2_idx = has_offset ? 3 : 2;
+    int r1_idx = has_offset ? 3 : 2;
+    int r2_idx = has_offset ? 2 : 1;
 
-    if(!n->children[r2_idx]->isLeaf)
+    if(!n->children[r1_idx]->isLeaf)
         throw InvalidInstructionException("The second register of mrmovq should not have parenthesis");
-    if(!((has_offset && n->children[1]->isLeaf) || !has_offset))
+    if(has_offset && !n->children[1]->isLeaf)
         throw InvalidInstructionException("The offset of mrmovq is present and has parenthesis (which it should not have)");
-    if(n->children[r1_idx]->isLeaf || n->children[r1_idx]->children.size() != 1 || !n->children[r1_idx]->children[0]->isLeaf)
+    if(n->children[r2_idx]->isLeaf || n->children[r2_idx]->children.size() != 1 || !n->children[r2_idx]->children[0]->isLeaf)
         throw InvalidInstructionException("The first register of mrmovq should be a register in exactly one set of parenthesis");
 
     // Parse two registers
-    std::string reg1 = n->children[r1_idx]->children[0]->value, reg2 = n->children[r2_idx]->value, value = has_offset ? n->children[1]->value : "";
+    std::string reg2 = n->children[r2_idx]->children[0]->value, reg1 = n->children[r1_idx]->value, value = has_offset ? n->children[1]->value : "";
 
     this->r1 = reg_string_to_code(reg1);
     this->r2 = reg_string_to_code(reg2);
