@@ -19,7 +19,7 @@
     (rrmovq %rsi %rcx)         ; Move high -> temp
     (addq %rdi %rsi)           ; Set high <- high + low
     (rrmovq %rcx %rdi)         ; Set low <- high (aka temp)
-    (iaddl -1 %rdx)            ; Subtract one from "steps"
+    (iaddq -1 %rdx)            ; Subtract one from "steps"
     (call fibonacci)           ; fibonacci(high, high + low)
 
     fib_ret

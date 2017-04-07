@@ -79,6 +79,9 @@ instruction::instruction(node* n, const std::unordered_map<std::string, y86addr_
         case IRMOVQ:
             parse_as_irmovq(n, labelmap, ignore_label_error);
             break;
+        case IADDQ:
+            parse_as_iaddq(n, labelmap, ignore_label_error);
+            break;
         case LEAVE:
             parse_as_leave(n);
         default:
@@ -162,14 +165,14 @@ uint8_t instruction::instr_string_to_code(const std::string& val) {
 /* Individual parsers for each instruction */
 void instruction::parse_as_halt(node* n) {
     if(n->children.size() != 1)
-        throw InvalidInstructionException("halt requres exactly 0 arguments");
+        throw InvalidInstructionException("halt requires exactly 0 arguments");
     // Do nothing. Is already parsed
 }
 
 
 void instruction::parse_as_nop(node* n) {
     if(n->children.size() != 1)
-        throw InvalidInstructionException("halt requres exactly 0 arguments");
+        throw InvalidInstructionException("noop requires exactly 0 arguments");
     // Do nothing. Is already parsed
 }
 

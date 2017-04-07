@@ -57,6 +57,7 @@ public:
                 {"irmovq", 10},
                 {"rmmovq", 10},
                 {"mrmovq", 10},
+                {"iaddq",  10},
                 {"addq",   2},
                 {"subq",   2},
                 {"andq",   2},
