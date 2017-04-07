@@ -5,7 +5,7 @@
     (irmovq stack %rsp)
     (irmovq data %rdi)             ; Pointer to array. Parameter to quicksort
     (irmovq 0 %rsi)                ; Start index of the quicksort subproblem (inclusive)
-    (irmovq 10 %rdx)               ; End index of the quicksort subproblem (exclusive)
+    (irmovq 9 %rdx)                ; End index of the quicksort subproblem (exclusive)
     (call quicksort)               ; Call quicksort(data, 0, 10)
     (halt)
 
@@ -40,20 +40,19 @@
     (pushq %rdi)               ; Caller-saved register
     (pushq %rsi)               ; Caller-saved register
     (pushq %rdx)               ; Caller-saved register
-    (pushq %rax)               ; Caller-saved register
-    (rrmovq %rax %rdx)         ; 3rd parameter = pivot
+    (rrmovq %r9 %rdx)          ; 3rd parameter = pivot
     (call quicksort)           ; quicksort(array, low, pivot)
-    (popq %rax)                ; Caller-saved register restore
     (popq %rdx)                ; Caller-saved register restore
     (popq %rsi)                ; Caller-saved register restore
     (popq %rdi)                ; Caller-saved register restore
 
     ; Last call, do not bother saving registers
-    (rrmovq %rax %rsi)         ; 2nd parameter = pivot + 1
+    (rrmovq %r9 %rsi)          ; 2nd parameter = pivot + 1
     (iaddq 1 %rsi)             ; The + 1
     (call quicksort)           ; quicksort(array, low, pivot)
 
     quicksort_ret
+    (popq %r9)             ; Callee-saved register
     (rrmovq %rbp %rsp)     ; Move stack pointer back up
     (popq %rbp)            ; Pop old rbp value
     (ret)
@@ -78,13 +77,20 @@
 
     ; Get value of the pivot
     (rrmovq %rdi %r12)       ; %r12 = array + high
-    (addq %rdx %r12)         ; %r12 = array + high
+                             ; %r12 = array + high (add 8 times for qword)
+    (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12) (addq %rdx %r12)
     (mrmovq (%r12) %r13)     ; %r13 = *(array + high) gets value of pivot
                              ; %r13 will be referred to as pivot, %r12 as pivot_ptr
     ; Setup i_ptr and j_ptr
     (rrmovq %rsi %r14)       ; Setup i in %r14
-    (rrmovq %rdi %r11)       ; Setup j in %r11
+    (rrmovq %rsi %r11)       ; Setup j in %r11
     (iaddq -1 %r14)          ; i = lo - 1
+    (addq %r14 %r14)         ; %r14*2
+    (addq %r14 %r14)         ; %r14*4
+    (addq %r14 %r14)         ; %r14*8
+    (addq %r11 %r11)         ; %r14*2
+    (addq %r11 %r11)         ; %r14*4
+    (addq %r11 %r11)         ; %r14*8
     (addq %rdi %r14)         ; i_ptr = &array[i]
     (addq %rdi %r11)         ; i_ptr = &array[j]
 
@@ -95,7 +101,7 @@
     (mrmovq (%r11) %r10)     ; %r10 = array[j]
     (subq %r13 %r10)         ; array[pivot] - array[j]
     (jg part_no_swap)        ; Skip swap(array[i], array[j])
-    (iaddq 1 %r14)           ; i++
+    (iaddq 8 %r14)           ; i++
     (pushq %rdi)             ; Save %rdi
     (pushq %rsi)             ; Save %rsi
     (rrmovq %r14 %rdi)       ; parameter 1: &array[i]
@@ -104,13 +110,13 @@
     (popq %rsi)              ; Restore %rsi
     (popq %rdi)              ; Restore %rdi
     part_no_swap
-    (iaddq 1 %r11)           ; j++
+    (iaddq 8 %r11)           ; j++
     (jmp partition_loop)     ; Return to top of loop
 
     part_last_swap
     (iaddq 1 %r14)          ; i++
-    (pushq %rdi)             ; Save %rdi
-    (pushq %rsi)             ; Save %rsi
+    (pushq %rdi)            ; Save %rdi
+    (pushq %rsi)            ; Save %rsi
     (rrmovq %r14 %rdi)      ; parameter 1: &array[i]
     (rrmovq %r12 %rsi)      ; parameter 2: &array[pivot]
     (call swap)
@@ -155,4 +161,14 @@
 
     (pos 4096)
     data
+    (qword #x5)
+    (qword #x8)
+    (qword #x9)
+    (qword #x2)
+    (qword #x3)
+    (qword #xA)
+    (qword #x4)
+    (qword #x7)
+    (qword #x1)
+    (qword #x9)
 )

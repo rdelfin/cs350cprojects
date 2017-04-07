@@ -401,6 +401,13 @@ int execute_iaddq(state_t* state, instruction_t instr) {
 }
 
 
+/**
+ * Computes a logical xor over a and b (as opposed to the bitwise a ^ b operator)
+ */
+static inline uint8_t xor(uint8_t a, uint8_t b) {
+    return (!a && b) || (a && !b);
+}
+
 uint8_t condition_eval(state_t* state, uint8_t condition) {
     uint8_t sf, zf, of;
     state_get_cc(state, &of, &zf, &sf);
@@ -409,17 +416,17 @@ uint8_t condition_eval(state_t* state, uint8_t condition) {
         case 0:   // No condition
             return 1;
         case 1:   // LE
-            return (sf^of) | zf;
+            return xor(sf, of) || zf;
         case 2:   // L
-            return sf ^ of;
+            return xor(sf, of);
         case 3:   // E
-            return zf;
+            return !!zf;
         case 4:   // NE
-            return ~zf;
+            return !zf;
         case 5:   // GE
-            return ~(sf^of);
+            return !xor(sf, of);
         case 6:   // G
-            return ~(zf^of) & ~zf;
+            return !xor(zf, of) && !zf;
         default:
             return 0;
     }
