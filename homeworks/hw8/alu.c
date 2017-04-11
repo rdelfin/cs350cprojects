@@ -46,95 +46,68 @@ b1 not( b1 i ) {
 
 // Primitive AND function
 
-b1 and( b2 i ) {
+b1 and( b1 a, b1 b ) {
   b1 r;
-  bit j = i.a;
-  bit k = i.b;
-  bit l = j & k;
-  r.a = l;
+  r.a = a.a & b.a;
   return( r );
 }
 
 // Primitive OR function
 
-b1 or( b2 i ) {
+b1 or( b1 a, b1 b ) {
   b1 r;
-  bit j = i.a;
-  bit k = i.b;
-  bit l = j | k;
-
-//   printf( "j= %d, k= %d, l= %d\n", j, k, l );
-  r.a = l;
+  r.a = a.a | b.a;
   return( r );
 }
 
 // Defined NAND
 
-b1 nand( b2 i ) {
-  b1 r, s;
-  r = and( i );
-  s = not( r );
-  return( s );
+b1 nand( b1 a, b1 b ) {
+  return( not(and(a, b))  );
 }
 
 // Defined XOR function
 
-b1 xor( b2 i ) {
-
-  // This is much more verbose than necessary!  This is shown to give
-  // an example of using C-language structures.
-
-  b1 r, s, o, p, a, b, an, bn;
-  b2 x, y;
-
-  // Destructure i, place in a and b
-  a.a = i.a;
-  b.a = i.b;
-
-  // printf("a.a= %d, b.a= %d.\n", a.a, b.a);
-
-  // Compute NOT values of inputs
-  an = not( a );
-  bn = not( b );
-
-  // printf("an.a= %d, bn.a= %d.\n", an.a, bn.a);
-
-  // Structure x
-  x.a = an.a;
-  x.b = bn.a;
-
-  // printf("x.a= %d, x.b= %d.\n", x.a, x.b);
-
-  // Compute AND( an, bn );
-  s = and( x );
-
-  // printf("s.a= %d.\n", s.a);
-
-  r = and( i );
-
-  // Structure y
-  y.a = r.a; // a & b
-  y.b = s.a; // a~ & b~
-
-  // printf("y.a= %d, y.b= %d.\n", y.a, y.b);
-
-  // Compute OR
-  o = or( y );
-
-  p = not( o );
-
-  return( p );
+b1 xor( b1 a, b1 b ) {
+  return or(and(a, not(b)), and(not(a), b));
 }
 
 // Defined EQUV function
 
-b1 equv( b2 i )  {
-  b1 r, s;
+b1 equv( b1 a, b1 b )  {
+  return( not(xor(a, b)) );
+}
 
-  r = xor( i );
-  s = not( r );
+// Defined MUX 2 inputs, 1-bit input
+b1 mux_2in_1bit( b1 a, b1 b, b1 s) {
+  return or( and(a, s), and(b, not(s)) );
+}
 
-  return( s );
+
+// Defined MUX 2 inputs, 4-bit input
+b4 mux_2in_4bit( b4 a, b4 b, b1 s ) {
+  b4 r;
+  b1 aa, ab, ac, ad, ba, bb, bc, bd;
+  aa.a = a.a;
+  ab.a = a.b;
+  ac.a = a.c;
+  ad.a = a.d;
+  ba.a = b.a;
+  bb.a = b.b;
+  bc.a = b.c;
+  bd.a = b.d;
+
+  r.a = mux_2in_1bit(aa, ba, s).a;
+  r.b = mux_2in_1bit(ab, bb, s).a;
+  r.c = mux_2in_1bit(ac, bc, s).a;
+  r.d = mux_2in_1bit(ad, bd, s).a;
+
+  return r;
+}
+
+// Defined MUX 4 inputs, 4-bit input
+b4 mux_4in_4bit( b4 a, b4 b, b2 s ) {
+  
 }
 
 // End of primitives
@@ -186,62 +159,50 @@ struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
 int main( int intc, char *argv[], char *env[] ) {
 
   // inputs
-  bit a, b;
-  b2 i;
+  b1 a, b;
 
   // outputs
   bit o;
   b1  q;
 
   // Create case
-  a = 0;
-  b = 0;
+  a.a = 0;
+  b.a = 0;
 
-  // Set inputs to structure
-  i.a = a;
-  i.b = b;
-
-  q = equv( i );
+  q = equv( a, b );
   o = q.a;
 
   // Print output
-  printf( "a= %d, b= %d, z= %d\n", a, b, o );
+  printf( "a= %d, b= %d, z= %d\n", a.a, b.a, o );
 
   // Next case
-  a = 1;
-  b = 0;
+  a.a = 1;
+  b.a = 0;
 
-  i.a = a;
-  i.b = b;
-
-  q = equv( i );
+  q = equv( a, b );
   o = q.a;
 
-  printf( "a= %d, b= %d, z= %d\n", a, b, o );
+  printf( "a= %d, b= %d, z= %d\n", a.a, b.a, o );
 
   // Next case
-  a = 0;
-  b = 1;
+  a.a = 0;
+  b.a = 1;
 
-  i.a = a;
-  i.b = b;
 
-  q = equv( i );
+  q = equv( a, b );
   o = q.a;
 
-  printf( "a= %d, b= %d, z= %d\n", a, b, o );
+  printf( "a= %d, b= %d, z= %d\n", a.a, b.a, o );
 
   // Next case
-  a = 1;
-  b = 1;
+  a.a = 1;
+  b.a = 1;
 
-  i.a = a;
-  i.b = b;
 
-  q = equv( i );
+  q = equv( a, b );
   o = q.a;
 
-  printf( "a= %d, b= %d, z= %d\n", a, b, o );
+  printf( "a= %d, b= %d, z= %d\n", a.a, b.a, o );
 
   return( 0 );
 }
