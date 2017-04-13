@@ -33,6 +33,18 @@ typedef struct bits2 b2;
 typedef struct bits3 b3;
 typedef struct bits4 b4;
 
+struct adder_output1 {
+  bit o;
+  bit co;
+};
+
+struct adder_output4 {
+  b4 o;
+  bit co;
+};
+
+typedef struct adder_output1 addo1;
+typedef struct adder_output4 addo4;
 
 // Primitive NOT function
 
@@ -83,6 +95,14 @@ b1 mux_2in_1bit( b1 a, b1 b, b1 s) {
   return or( and(a, s), and(b, not(s)) );
 }
 
+b1 mux_4in_1bit( b1 a, b1 b, b1 c, b1 d, b2 s ) {
+  b1 sa, sb;
+  sa.a = s.a;
+  sb.a = s.b;
+
+  return mux_2in_1bit(mux_2in_1bit(a, b, sa), mux_2in_1bit(c, d, sa), sb);
+}
+
 
 // Defined MUX 2 inputs, 4-bit input
 b4 mux_2in_4bit( b4 a, b4 b, b1 s ) {
@@ -106,8 +126,118 @@ b4 mux_2in_4bit( b4 a, b4 b, b1 s ) {
 }
 
 // Defined MUX 4 inputs, 4-bit input
-b4 mux_4in_4bit( b4 a, b4 b, b2 s ) {
+b4 mux_4in_4bit( b4 a, b4 b, b4 c, b4 d, b2 s ) {
+  b1 sa, sb;
+  sa.a = s.a;
+  sb.a = s.b;
+
+  return mux_2in_4bit(mux_2in_4bit(a, b, sa), mux_2in_4bit(c, d, sa), sb);
+}
+
+addo1 one_bit_adder( b1 a, b1 b, b1 ci ) {
+  addo1 r;
+  r.o = xor(a, xor(b, ci)).a;
+  r.co = or(and(a, b), or(and(b, ci), and(a, b))).a;
+
+  return r;
+}
+
+addo4 four_bit_adder( b4 a, b4 b, b1 ci ) {
+  b1 a1, a2, a3, a4, b1, b2, b3, b4, ci1, ci2, ci3, ci4;
+  addo4 r;
+  a1.a = a.a;
+  a2.a = a.b;
+  a3.a = a.c;
+  a4.a = a.d;
+  b1.a = b.a;
+  b2.a = b.b;
+  b3.a = b.c;
+  b4.a = b.d;
+  ci1.a = ci.a;
+
+  addo1 out1 = one_bit_adder( a1, b1, ci1 );
+  ci2.a = out1.co;
+  addo1 out2 = one_bit_adder( a2, b2, ci2 );
+  ci3.a = out2.co;
+  addo1 out3 = one_bit_adder( a3, b3, ci3 );
+  ci4.a = out3.co;
+  addo1 out4 = one_bit_adder( a4, b4, ci4 );
+
+  r.o.a = out1.o;
+  r.o.b = out2.o;
+  r.o.c = out3.o;
+  r.o.d = out4.o;
+  r.co = out4.co;
+
+  return r;
+}
+
+b4 and4( b4 a, b4 b ) {
+  b4 r;
+  b1 a1, a2, a3, a4, b1, b2, b3, b4;
+
+  a1.a = a.a;
+  a2.a = a.b;
+  a3.a = a.c;
+  a4.a = a.d;
+  b1.a = b.a;
+  b2.a = b.b;
+  b3.a = b.c;
+  b4.a = b.d;
+  r.a = and(a1, b1).a;
+  r.b = and(a2, b2).a;
+  r.c = and(a3, b3).a;
+  r.d = and(a4, b4).a;
+
+  return r;
+}
+
+b4 xor4( b4 a, b4 b ) {
+  b4 r;
+  b1 a1, a2, a3, a4, b1, b2, b3, b4;
+
+  a1.a = a.a;
+  a2.a = a.b;
+  a3.a = a.c;
+  a4.a = a.d;
+  b1.a = b.a;
+  b2.a = b.b;
+  b3.a = b.c;
+  b4.a = b.d;
+  r.a = xor(a1, b1).a;
+  r.b = xor(a2, b2).a;
+  r.c = xor(a3, b3).a;
+  r.d = xor(a4, b4).a;
+
+  return r;
+}
+
+b4 not4( b4 a ) {
+  b4 r;
+  b1 a1, a2, a3, a4;
+
+  a1.a = a.a;
+  a2.a = a.b;
+  a3.a = a.c;
+  a4.a = a.d;
+  r.a = not( a1 ).a;
+  r.b = not( a2 ).a;
+  r.c = not( a3 ).a;
+  r.d = not( a4 ).a;
+
+  return r;
+}
+
+addo4 four_bit_sub( b4 a, b4 b, b1 ci ) {
+  b4 one;
+  b1 zero;
+  one.a = 1;
+  one.b = one.c = one.d = 0;
+  zero.a = 0;
+   
+  addo4 b_neg = four_bit_adder(a, four_bit_adder(not4(b), one, zero).o, ci);
   
+  return b_neg;
 }
 
 // End of primitives
@@ -149,8 +279,43 @@ struct y86_alu_out {
 
 struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
   struct y86_alu_out r;
+  
+  b4 a, b;
+  b1 zero, sa, sb;
+  b2 s;
+  a.a = i.a0;
+  a.b = i.a1;
+  a.c = i.a2;
+  a.d = i.a3;
+  b.a = i.b0;
+  b.b = i.b1;
+  b.c = i.b2;
+  b.d = i.b3;
+  zero.a = 0;
+  s.a = i.s0;
+  s.b = i.s1;
+  sa.a = s.a;
+  sb.a = s.b;
 
-  // Solution goes here.
+  addo4 add = four_bit_adder(a, b, zero);
+  addo4 sub = four_bit_sub(a, b, zero);
+  b4 and_r = and4(a, b);
+  b4 xor_r = xor4(a, b);
+  
+  b4 out = mux_4in_4bit(add.o, sub.o, and_r, xor_r, s);
+  b4 out_not = not4(out);
+  r.f0 = out.a;
+  r.f1 = out.b;
+  r.f2 = out.c;
+  r.f3 = out.d;
+
+  b1 sum_of, sub_of;
+  sum_of.a = add.co;
+  sub_of.a = sub.co;
+
+  r.of = mux_2in_1bit(zero, mux_2in_1bit(sum_of, sub_of, sa), sb).a;
+  r.zf = and((b1){out_not.a}, and((b1){out_not.b}, and((b1){out_not.c}, (b1){out_not.d}))).a;
+  r.sf = out.d;
 
   return( r );
 }
