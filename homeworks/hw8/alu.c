@@ -93,7 +93,7 @@ b1 equv( b1 a, b1 b )  {
 
 // Defined MUX 2 inputs, 1-bit input
 b1 mux_2in_1bit( b1 a, b1 b, b1 s) {
-  return or( and(a, s), and(b, not(s)) );
+  return or( and(a, not(s)), and(b, s) );
 }
 
 b1 mux_4in_1bit( b1 a, b1 b, b1 c, b1 d, b2 s ) {
@@ -144,6 +144,7 @@ addo1 one_bit_adder( b1 a, b1 b, b1 ci ) {
 }
 
 addo4 four_bit_adder( b4 a, b4 b, b1 ci ) {
+
   b1 a1, a2, a3, a4, b1, b2, b3, b4, ci1, ci2, ci3, ci4;
   addo4 r;
   a1.a = a.a;
@@ -277,6 +278,10 @@ struct y86_alu_out {
   bit sf;
 };
 
+int b4_to_int(b4 a) {
+  return a.a | (a.b << 1) | (a.c << 2) | (a.d << 3);
+}
+
 
 struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
   struct y86_alu_out r;
@@ -330,43 +335,31 @@ int main( int argc, char *argv[], char *env[] ) {
   b2 s;     // Signal is (0,0)
   s.a = s.b = 0;
 
-  struct y86_alu_in in;
-  in.a0 = in.b0 = 1;
-  in.a1 = in.a2 = in.a3 = in.b1 = in.b2 = in.b3 = 0;
-  in.s0 = s.a;
-  in.s1 = s.b;
-
-  struct y86_alu_out r = y86_alu_4_bit(in);
-  int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
-  int c_calc = 1+1;
-  printf("0b%d%d%d%d + 0b%d%d%d%d =\n\t(alu): 0b%d%d%d%d\n\t(c):   0b%d%d%d%d\n", in.a3, in.a2, in.a1, in.a0, in.a3, in.a2, in.a1, in.a0,
-                                                                  r.f3, r.f2, r.f1, r.f0,
-                                                                  !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1));
 
 
-//  for(a = 0; a < pow(2, 4); a++) {
-//    for(b = 0; b < pow(2, 4); b++) {
-//      struct y86_alu_in in;
-//      in.a0 = !!(a & 1);
-//      in.a1 = !!(a & 2);
-//      in.a2 = !!(a & 4);
-//      in.a3 = !!(a & 8);
-//      in.b0 = !!(b & 1);
-//      in.b1 = !!(b & 2);
-//      in.b2 = !!(b & 4);
-//      in.b3 = !!(b & 8);
-//      in.s0 = s.a;
-//      in.s1 = s.b;
-// 
-//      struct y86_alu_out r = y86_alu_4_bit(in);
-//      int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
-//      int c_calc = a+b;
-// 
-//      printf("%d + %d =\n\t(alu): 0b%d%d%d%d\n\t(c):   0b%d%d%d%d\n", a, b,
-//                                                                      r.f3, r.f2, r.f1, r.f0,
-//                                                                      !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1));
-//    }
-//  }
+  for(a = 0; a < pow(2, 4); a++) {
+    for(b = 0; b < pow(2, 4); b++) {
+      struct y86_alu_in in;
+      in.a0 = !!(a & 1);
+      in.a1 = !!(a & 2);
+      in.a2 = !!(a & 4);
+      in.a3 = !!(a & 8);
+      in.b0 = !!(b & 1);
+      in.b1 = !!(b & 2);
+      in.b2 = !!(b & 4);
+      in.b3 = !!(b & 8);
+      in.s0 = s.a;
+      in.s1 = s.b;
+ 
+      struct y86_alu_out r = y86_alu_4_bit(in);
+      int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
+      int c_calc = a+b;
+ 
+      printf("%d + %d =\n\t(alu): 0b%d%d%d%d\n\t(c):   0b%d%d%d%d\n", a, b,
+                                                                      r.f3, r.f2, r.f1, r.f0,
+                                                                      !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1));
+    }
+  }
 
   return( 0 );
 }
