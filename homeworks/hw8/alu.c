@@ -286,6 +286,7 @@ int b4_to_int(b4 a) {
 struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
   struct y86_alu_out r;
   
+  // Extract data into useful structures
   b4 a, b;
   b1 zero, sa, sb;
   b2 s;
@@ -303,24 +304,34 @@ struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
   sa.a = s.a;
   sb.a = s.b;
 
+  // Calculate all operations
   addo4 add = four_bit_adder(a, b, zero);
   addo4 sub = four_bit_sub(a, b, zero);
   b4 and_r = and4(a, b);
   b4 xor_r = xor4(a, b);
 
+  // Choose one using mux and write back to r
   b4 out = mux_4in_4bit(add.o, sub.o, and_r, xor_r, s);
-  b4 out_not = not4(out);
   r.f0 = out.a;
   r.f1 = out.b;
   r.f2 = out.c;
   r.f3 = out.d;
 
+
+  // Calculate the condition flags (overflow, zero and sign flag)
   b1 sum_of, sub_of;
   sum_of.a = add.co;
   sub_of.a = sub.co;
 
-  r.of = mux_2in_1bit(zero, mux_2in_1bit(sum_of, sub_of, sa), sb).a;
-  r.zf = and((b1){out_not.a}, and((b1){out_not.b}, and((b1){out_not.c}, (b1){out_not.d}))).a;
+  b1 out_not_a, out_not_b, out_not_c, out_not_d;
+  b4 out_not = not4(out);
+  out_not_a.a = out_not.a;
+  out_not_b.a = out_not.b;
+  out_not_c.a = out_not.c;
+  out_not_d.a = out_not.d;
+
+  r.of = mux_2in_1bit(mux_2in_1bit(sum_of, sub_of, sa), zero, sb).a;
+  r.zf = and(out_not_a, and(out_not_b, and(out_not_c, out_not_d))).a;
   r.sf = out.d;
 
   return( r );
@@ -335,7 +346,8 @@ int main( int argc, char *argv[], char *env[] ) {
   b2 s;     // Signal is (0,0)
   s.a = s.b = 0;
 
-
+  int total_tests = pow(2, 4)*pow(2, 4);
+  int passed_tests = 0;
 
   for(a = 0; a < pow(2, 4); a++) {
     for(b = 0; b < pow(2, 4); b++) {
@@ -353,13 +365,20 @@ int main( int argc, char *argv[], char *env[] ) {
  
       struct y86_alu_out r = y86_alu_4_bit(in);
       int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
-      int c_calc = a+b;
- 
-      printf("%d + %d =\n\t(alu): 0b%d%d%d%d\n\t(c):   0b%d%d%d%d\n", a, b,
-                                                                      r.f3, r.f2, r.f1, r.f0,
-                                                                      !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1));
+      int c_calc = 0xF & a+b;
+      int of = !!(0x10 & a+b), zf = !!((0xF&a+b) == 0), sf = !!(0x8 & a+b);
+
+      if(c != c_calc || of != r.of || zf != r.zf || sf != r.sf) {
+        printf("%d + %d =\n\t(alu): 0b%d%d%d%d, of: %d, zf: %d, sf: %d\n\t(c):   0b%d%d%d%d, of: %d, zf: %d, sf: %d\n", a, b,
+                                                                        r.f3, r.f2, r.f1, r.f0, r.of, r.zf, r.sf,
+                                                                        !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1), of, zf, sf);
+      } else
+        passed_tests++;
     }
   }
 
+  printf("Passed %d/%d tests for addition\n", passed_tests, total_tests);
+
   return( 0 );
 }
+
