@@ -4,7 +4,7 @@
     (irmovq stack %rsp)
     (irmovq 0 %rdi)             ; "low" parameter in fib
     (irmovq 1 %rsi)             ; "high" parameter in fib
-    (irmovq 10 %rdx)            ; "steps" parameter in fib
+    (irmovq 20 %rdx)            ; "steps" parameter in fib
     (call fibonacci)
     (halt)
 

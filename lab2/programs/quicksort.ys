@@ -161,14 +161,4 @@
 
     (pos 4096)
     data
-    (qword #x5)
-    (qword #x8)
-    (qword #x9)
-    (qword #x2)
-    (qword #x3)
-    (qword #xA)
-    (qword #x4)
-    (qword #x7)
-    (qword #x1)
-    (qword #x9)
 )
