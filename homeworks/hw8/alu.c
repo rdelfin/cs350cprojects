@@ -339,45 +339,50 @@ struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
 
 
 int main( int argc, char *argv[], char *env[] ) {
-  
-  // Testing addition:
+  int a, b, op;
 
-  int a, b; // a and b as integers
-  b2 s;     // Signal is (0,0)
-  s.a = s.b = 0;
+  for(op = 0; op < 4; op++) {
+    b2 s;
+    s.a = op & 1;
+    s.b = !!(op & 2);
+   
+    int total_tests = pow(2, 4)*pow(2, 4);
+    int passed_tests = 0;
+    
+    for(a = 0; a < pow(2, 4); a++) {
+      for(b = 0; b < pow(2, 4); b++) {
+        struct y86_alu_in in;
+        in.a0 = !!(a & 1);
+        in.a1 = !!(a & 2);
+        in.a2 = !!(a & 4);
+        in.a3 = !!(a & 8);
+        in.b0 = !!(b & 1);
+        in.b1 = !!(b & 2);
+        in.b2 = !!(b & 4);
+        in.b3 = !!(b & 8);
+        in.s0 = s.a;
+        in.s1 = s.b;
 
-  int total_tests = pow(2, 4)*pow(2, 4);
-  int passed_tests = 0;
+        int c_calc_raw = (op == 0 ? a+b : (op == 1 ? (a+((~b&0xF) + 1)) : (op == 2 ? a&b : a^b)));
 
-  for(a = 0; a < pow(2, 4); a++) {
-    for(b = 0; b < pow(2, 4); b++) {
-      struct y86_alu_in in;
-      in.a0 = !!(a & 1);
-      in.a1 = !!(a & 2);
-      in.a2 = !!(a & 4);
-      in.a3 = !!(a & 8);
-      in.b0 = !!(b & 1);
-      in.b1 = !!(b & 2);
-      in.b2 = !!(b & 4);
-      in.b3 = !!(b & 8);
-      in.s0 = s.a;
-      in.s1 = s.b;
- 
-      struct y86_alu_out r = y86_alu_4_bit(in);
-      int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
-      int c_calc = 0xF & a+b;
-      int of = !!(0x10 & a+b), zf = !!((0xF&a+b) == 0), sf = !!(0x8 & a+b);
-
-      if(c != c_calc || of != r.of || zf != r.zf || sf != r.sf) {
-        printf("%d + %d =\n\t(alu): 0b%d%d%d%d, of: %d, zf: %d, sf: %d\n\t(c):   0b%d%d%d%d, of: %d, zf: %d, sf: %d\n", a, b,
-                                                                        r.f3, r.f2, r.f1, r.f0, r.of, r.zf, r.sf,
-                                                                        !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1), of, zf, sf);
-      } else
-        passed_tests++;
+   
+        struct y86_alu_out r = y86_alu_4_bit(in);
+        int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
+        int c_calc = 0xF & c_calc_raw;
+        int of = !!(0x10 & c_calc_raw), zf = !!((0xF&c_calc_raw) == 0), sf = !!(0x8 & c_calc_raw);
+   
+        if(c != c_calc || of != r.of || zf != r.zf || sf != r.sf) {
+          char* op_symbol = (op == 0 ? "+" : (op == 1 ? "-" : (op == 2 ? "&" : "^")));
+          printf("%d %s %d =\n\t(alu): 0b%d%d%d%d, of: %d, zf: %d, sf: %d\n\t(c):   0b%d%d%d%d, of: %d, zf: %d, sf: %d\n", a, op_symbol, b,
+                                                                          r.f3, r.f2, r.f1, r.f0, r.of, r.zf, r.sf,
+                                                                          !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1), of, zf, sf);
+        } else
+          passed_tests++;
+      }
     }
+    char* op_name = (op == 0 ? "addition" : (op == 1 ? "subtraction" : (op == 2 ? "and" : "xor")));
+    printf("Passed %d/%d tests for %s\n", passed_tests, total_tests, op_name);
   }
-
-  printf("Passed %d/%d tests for addition\n", passed_tests, total_tests);
 
   return( 0 );
 }
