@@ -330,29 +330,43 @@ int main( int argc, char *argv[], char *env[] ) {
   b2 s;     // Signal is (0,0)
   s.a = s.b = 0;
 
-  for(a = 0; a < pow(2, 4); a++) {
-    for(b = 0; b < pow(2, 4); b++) {
-      struct y86_alu_in in;
-      in.a0 = !!(a & 1);
-      in.a1 = !!(a & 2);
-      in.a2 = !!(a & 4);
-      in.a3 = !!(a & 8);
-      in.b0 = !!(b & 1);
-      in.b1 = !!(b & 2);
-      in.b2 = !!(b & 4);
-      in.b3 = !!(b & 8);
-      in.s0 = s.a;
-      in.s1 = s.b;
+  struct y86_alu_in in;
+  in.a0 = in.b0 = 1;
+  in.a1 = in.a2 = in.a3 = in.b1 = in.b2 = in.b3 = 0;
+  in.s0 = s.a;
+  in.s1 = s.b;
 
-      struct y86_alu_out r = y86_alu_4_bit(in);
-      int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
-      int c_calc = a+b;
+  struct y86_alu_out r = y86_alu_4_bit(in);
+  int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
+  int c_calc = 1+1;
+  printf("0b%d%d%d%d + 0b%d%d%d%d =\n\t(alu): 0b%d%d%d%d\n\t(c):   0b%d%d%d%d\n", in.a3, in.a2, in.a1, in.a0, in.a3, in.a2, in.a1, in.a0,
+                                                                  r.f3, r.f2, r.f1, r.f0,
+                                                                  !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1));
 
-      printf("%d + %d =\n\t(alu): 0b%d%d%d%d\n\t(c):   0b%d%d%d%d\n", a, b,
-                                                                      r.f3, r.f2, r.f1, r.f0,
-                                                                      !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1));
-    }
-  }
+
+//  for(a = 0; a < pow(2, 4); a++) {
+//    for(b = 0; b < pow(2, 4); b++) {
+//      struct y86_alu_in in;
+//      in.a0 = !!(a & 1);
+//      in.a1 = !!(a & 2);
+//      in.a2 = !!(a & 4);
+//      in.a3 = !!(a & 8);
+//      in.b0 = !!(b & 1);
+//      in.b1 = !!(b & 2);
+//      in.b2 = !!(b & 4);
+//      in.b3 = !!(b & 8);
+//      in.s0 = s.a;
+//      in.s1 = s.b;
+// 
+//      struct y86_alu_out r = y86_alu_4_bit(in);
+//      int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
+//      int c_calc = a+b;
+// 
+//      printf("%d + %d =\n\t(alu): 0b%d%d%d%d\n\t(c):   0b%d%d%d%d\n", a, b,
+//                                                                      r.f3, r.f2, r.f1, r.f0,
+//                                                                      !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1));
+//    }
+//  }
 
   return( 0 );
 }
