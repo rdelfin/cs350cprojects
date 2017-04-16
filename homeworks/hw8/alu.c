@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef unsigned char bit;
 
@@ -137,7 +138,7 @@ b4 mux_4in_4bit( b4 a, b4 b, b4 c, b4 d, b2 s ) {
 addo1 one_bit_adder( b1 a, b1 b, b1 ci ) {
   addo1 r;
   r.o = xor(a, xor(b, ci)).a;
-  r.co = or(and(a, b), or(and(b, ci), and(a, b))).a;
+  r.co = or(and(a, b), or(and(b, ci), and(a, ci))).a;
 
   return r;
 }
@@ -301,7 +302,7 @@ struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
   addo4 sub = four_bit_sub(a, b, zero);
   b4 and_r = and4(a, b);
   b4 xor_r = xor4(a, b);
-  
+
   b4 out = mux_4in_4bit(add.o, sub.o, and_r, xor_r, s);
   b4 out_not = not4(out);
   r.f0 = out.a;
@@ -321,53 +322,37 @@ struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
 }
 
 
-int main( int intc, char *argv[], char *env[] ) {
+int main( int argc, char *argv[], char *env[] ) {
+  
+  // Testing addition:
 
-  // inputs
-  b1 a, b;
+  int a, b; // a and b as integers
+  b2 s;     // Signal is (0,0)
+  s.a = s.b = 0;
 
-  // outputs
-  bit o;
-  b1  q;
+  for(a = 0; a < pow(2, 4); a++) {
+    for(b = 0; b < pow(2, 4); b++) {
+      struct y86_alu_in in;
+      in.a0 = !!(a & 1);
+      in.a1 = !!(a & 2);
+      in.a2 = !!(a & 4);
+      in.a3 = !!(a & 8);
+      in.b0 = !!(b & 1);
+      in.b1 = !!(b & 2);
+      in.b2 = !!(b & 4);
+      in.b3 = !!(b & 8);
+      in.s0 = s.a;
+      in.s1 = s.b;
 
-  // Create case
-  a.a = 0;
-  b.a = 0;
+      struct y86_alu_out r = y86_alu_4_bit(in);
+      int c = r.f0 | (r.f1 << 1) | (r.f2 << 2) | (r.f3 << 3);
+      int c_calc = a+b;
 
-  q = equv( a, b );
-  o = q.a;
-
-  // Print output
-  printf( "a= %d, b= %d, z= %d\n", a.a, b.a, o );
-
-  // Next case
-  a.a = 1;
-  b.a = 0;
-
-  q = equv( a, b );
-  o = q.a;
-
-  printf( "a= %d, b= %d, z= %d\n", a.a, b.a, o );
-
-  // Next case
-  a.a = 0;
-  b.a = 1;
-
-
-  q = equv( a, b );
-  o = q.a;
-
-  printf( "a= %d, b= %d, z= %d\n", a.a, b.a, o );
-
-  // Next case
-  a.a = 1;
-  b.a = 1;
-
-
-  q = equv( a, b );
-  o = q.a;
-
-  printf( "a= %d, b= %d, z= %d\n", a.a, b.a, o );
+      printf("%d + %d =\n\t(alu): 0b%d%d%d%d\n\t(c):   0b%d%d%d%d\n", a, b,
+                                                                      r.f3, r.f2, r.f1, r.f0,
+                                                                      !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1));
+    }
+  }
 
   return( 0 );
 }
