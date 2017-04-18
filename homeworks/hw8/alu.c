@@ -305,10 +305,10 @@ struct y86_alu_out y86_alu_4_bit( struct y86_alu_in i ) {
   sb.a = s.b;
 
   // Calculate all operations
-  addo4 add = four_bit_adder(a, b, zero);
-  addo4 sub = four_bit_sub(a, b, zero);
-  b4 and_r = and4(a, b);
-  b4 xor_r = xor4(a, b);
+  addo4 add = four_bit_adder(b, a, zero);
+  addo4 sub = four_bit_sub(b, a, zero);
+  b4 and_r = and4(b, a);
+  b4 xor_r = xor4(b, a);
 
   // Choose one using mux and write back to r
   b4 out = mux_4in_4bit(add.o, sub.o, and_r, xor_r, s);
@@ -363,8 +363,8 @@ int main( int argc, char *argv[], char *env[] ) {
         in.s0 = s.a;
         in.s1 = s.b;
         
-        int minus_b = (~b+1) & 0xF;
-        int c_calc_raw = (op == 0 ? a+b : (op == 1 ? a+minus_b : (op == 2 ? a&b : a^b)));
+        int minus_a = (~a+1) & 0xF;
+        int c_calc_raw = (op == 0 ? b+a : (op == 1 ? b+minus_a : (op == 2 ? b&a : b^a)));
 
    
         struct y86_alu_out r = y86_alu_4_bit(in);
@@ -374,7 +374,7 @@ int main( int argc, char *argv[], char *env[] ) {
    
         if(c != c_calc || of != r.of || zf != r.zf || sf != r.sf) {
           char* op_symbol = (op == 0 ? "+" : (op == 1 ? "-" : (op == 2 ? "&" : "^")));
-          printf("%d %s %d =\n\t(alu): 0b%d%d%d%d, of: %d, zf: %d, sf: %d\n\t(c):   0b%d%d%d%d, of: %d, zf: %d, sf: %d\n", a, op_symbol, b,
+          printf("%d %s %d =\n\t(alu): 0b%d%d%d%d, of: %d, zf: %d, sf: %d\n\t(c):   0b%d%d%d%d, of: %d, zf: %d, sf: %d\n", b, op_symbol, a,
                                                                           r.f3, r.f2, r.f1, r.f0, r.of, r.zf, r.sf,
                                                                           !!(c_calc & 8), !!(c_calc & 4), !!(c_calc & 2), !!(c_calc & 1), of, zf, sf);
         } else
