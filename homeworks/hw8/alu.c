@@ -362,8 +362,9 @@ int main( int argc, char *argv[], char *env[] ) {
         in.b3 = !!(b & 8);
         in.s0 = s.a;
         in.s1 = s.b;
-
-        int c_calc_raw = (op == 0 ? a+b : (op == 1 ? (a+((~b&0xF) + 1)) : (op == 2 ? a&b : a^b)));
+        
+        int minus_b = (~b+1) & 0xF;
+        int c_calc_raw = (op == 0 ? a+b : (op == 1 ? a+minus_b : (op == 2 ? a&b : a^b)));
 
    
         struct y86_alu_out r = y86_alu_4_bit(in);
