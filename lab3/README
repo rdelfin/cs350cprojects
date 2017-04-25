@@ -1,0 +1,335 @@
+
+    Comments about the Laboratory C-Language Y86 Pipeline Emulator Code
+
+In this file, we make a number of comments that may help you with this
+Laboratory project.  Overall, we are trying to help you understand how
+an instruction-set architecture can be translated into a sequence of
+(pipelined) steps that are mostly overlapping.  Our efforts concern
+the Y86 "PIPE-" pipeline from "Computer Systems: A Programmer's
+Perspective" by Bryant & O'Hallaron (3rd edition).
+
+
+OVERVIEW
+
+This is an interactive shell simulator for the Y86 "PIPE-" pipeline
+from "Computer Systems: A Programmer's Perspective" by Bryant &
+O'Hallaron (3rd edition). The pipeline has five stages: fetch, decode,
+execute, memory, and writeback.
+
+Our model follows the PIPE- model outlined in the book as closely as
+possible.  A high-level diagram of this microprocessor is given on
+page 424.  Unfortunately, it is not as detailed as it could be; each
+stage is further elucidated in pages 405-412 (for the SEQ machine, the
+un-pipelined Y86) and pages 447-455 (for the full PIPE machine, which
+is like our PIPE- except it contains additional feedback paths for
+better performance).  Although the textbook does not provide explicit
+designs for the pipeline stages for the PIPE- itself (only SEQ and
+PIPE), the various combinational logic components for the PIPE- can
+usually be derived pretty easily from those of SEQ.  Sometimes the
+logic will not match perfectly, but it will be pretty close.
+
+
+RUNNING THE SIMULATOR
+
+Compile the simulator like so:
+
+  gcc -o y86 y86-pipeline-lab.c
+
+To run the simulator, you must provide at least one input file, which
+will be stored as the program.  The PC is, by default, set to the very
+first location in this file.  This file must be in the same format as
+the assembled object code we have been using for the previous two
+labs.
+
+There are various commands that enable you to view the state of the
+machine. Type "help" to get a list of these commands.  They are largely
+self-explanatory.
+
+Keep in mind that the version of this simulator that you are getting
+does not function properly.  You should try running it as-is on a
+simple input program so you can verify this for yourself; for
+instance, try the following program:
+
+((0 . 48)
+ (1 . 244)
+ (2 . 0)
+ (3 . 16)
+ (4 . 0)
+ (5 . 0)
+ (6 . 0)
+ (7 . 0)
+ (8 . 0)
+ (9 . 0)
+ (10 . 0))
+
+It only contains two instructions - an IRMOVQ and a HALT.  However, if
+you try to run this program with the simulator, you will see that it
+incorrectly increments the PC by 1 (instead of 10, the required value
+for an IRMOVQ instruction).  Your job for this lab is to provide the
+correct logic (listed below) for many of these functions.  When you
+are done, your pipeline simulator should work perfectly -- try it out
+on as many test programs as you can in order to ensure you have
+everything working.
+
+----------------
+MEMORY
+
+Our simulator has two memories, an instruction memory and a data
+memory, making it an example of the so-called "Harvard" architecture.
+This is important; it means that we cannot write a self-modifying
+program, which distinguishes this model from the simulator you wrote
+in Lab 2.  The textbook authors and we use separate memories because
+self-modifying code would complicate the pipeline control quite a bit
+-- we didn't want to make it *too* hard on you!
+
+----------------
+PIPELINE CONTROL LOGIC
+
+Below is a discussion of how the pipeline control logic works.
+Although we are not asking you to implement this logic in this lab, it
+may be useful to read this in order to fully understand the many
+different scenarios where we must stall certain stages, or introduce
+bubbles into the pipeline.  Refer to sections 4.5.4, 4.5.5, and 4.5.6
+for more information.
+
+We are aware that some of the information below will help you answer
+some of questions in this lab.  That's fine!
+
+* Branch handling:
+
+We use the "branch always taken" policy -- that is, whenever a
+conditional jump instruction is fetched, we always assume it is taken
+(i.e. we use the constant valC as the next PC), and correct the
+mistake later on.
+
+Since we use the "always taken" branch prediction policy, when we
+fetch a branch instruction from the imem, we set f.predPC to valC when
+we fetch it.  We detect a mispredicted branch when the conditional
+jump instruction reaches the memory stage; at that point, if the Cnd
+field is 0, we know we have mispredicted the branch.
+
+* Types of dependencies/hazards:
+
+reg_data_dependency: Early instruction writes to rX, later instruction
+                     reads from rX.  This includes load/use hazards.
+                     We solve this by stalling the fetch and decode
+                     stages until the instruction that writes to rX is
+                     out of the pipeline.
+
+		     Detect: reg_data_dependency()
+		     Behavior: stall fetch and decode
+		               bubble -> execute
+
+mispredicted_branch: We take all branches by default, so we have a
+                     mispredicted branch whenever we detect that a JXX
+                     instruction does not get taken.  This corresponds
+                     precisely to the m.Cnd field.  Therefore, in
+                     order to detect a mispredicted branch, we test
+                     whether m.icode is JXX and m.Cnd = 0.  When that
+                     is the case, we know that the decode and execute
+                     stages contain garbage.  Therefore, we need to
+                     allow the fetch stage to proceed by fetching the
+                     correct next instruction (happens as a part of
+                     the select_pc logic), and we stall the decode and
+                     execute stages (which introduce bubbles into the
+                     execute and memory stages, respectively).
+
+		     Detect: mispredicted_branch()
+		     Behavior: fetch correct PC (select_pc logic)
+		               bubble -> execute
+			       bubble -> memory
+
+ret:                For a ret instruction, we do not know the correct
+                    next PC until the ret instruction reaches the
+                    writeback stage.  Therefore, if a ret instruction
+                    is anywhere in the d, e, or m latches, we need to
+                    stall the fetch stage and introduce a bubble into
+                    the decode stage.  If a ret instruction is in the w
+                    latch, the fetch stage proceeds as usual, fetching
+                    the value read from memory (this happens as a part
+                    of the select_pc logic).
+
+                    Detect: ret()
+                    Behavior: stall fetch
+                              bubble -> decode
+
+stat:               If stat is anything other than AOK, that means
+                    that the machine needs to be halted, and all the
+                    stages behind it need to stall.
+
+		    Detect: check stat codes in order: w, m, e, d.
+		    Call the stage with non-AOK stat code "X".
+		    Behavior:
+
+* How do hazards affect each stage?
+We have outlined what to do in the event of a pipeline hazard
+above. But what happens when there is more than one hazard? For
+instance, what if there is a register data dependency between the W
+and D latches, but a mispredicted branch is just been detected in the
+M latch?
+
+The short answer is: The further along a hazard is in the pipeline,
+the greater its precedence. So, in the scenario above, even though the
+register data dependency involves the W latch, since there is a
+mispredicted branch in the M latch, the instruction the latch should
+never have been fetched -- so there really isn't a data dependency
+after all. The correct behavior is to act as if the instructions in
+the decode and execute latches were never fetched by passing along
+bubbles instead, and then fetching the correct instruction.
+
+Below, we outline the correct behavior of each stage in the event of
+various hazards that may affect its behavior. For each stage, we
+consider the various scenarios from first to last. At the top of each
+of the functions corresponding to these stages, you can see how we
+translate the text below into C code.
+
+    Writeback:
+      If w.stat != AOK
+        - Do not write to register file
+
+    Memory:
+      If w.stat != AOK:
+        - Stall w
+
+    Execute:
+      If w.stat != AOK
+        - Stall m
+      If m.stat != AOK
+        - Bubble m
+      If mispredicted_branch()
+        - Bubble m
+
+    Decode:
+      If w.stat != AOK or m.stat != AOK
+        - Stall e
+      If mispredicted_branch()
+        - Bubble e
+      If e.stat != AOK
+        - Bubble e
+      If reg_data_dependency()
+        - Bubble e
+
+    Fetch:
+      If w.stat != AOK or m.stat != AOK
+        - Stall d
+      If mispredicted_branch()
+        - Proceed with fetch
+      If ret_m()
+        - Bubble d
+      If e.stat != AOK
+        - Stall d
+      If ret_e()
+        - Bubble d (stall predPC)
+      If d.stat != AOK
+        - Bubble d (stall predPC)
+      If reg_data_dependency()
+        - Stall d
+      If ret_d()
+        - Bubble d (stall predPC)
+
+----------------
+
+HOW TO DO THIS LAB
+
+We have labeled the sections of code that need to be added/modified as
+follows:
+
+    reg_data_dependency
+    mispredicted_branch
+    ret_d, ret_e, ret_m
+    read_dmem
+    f_select_pc
+    f_instr_valid
+    f_need_valC
+    f_pc_increment
+    f_instr_valid (part 2)
+    d_srcB
+    d_dstM
+    e_alu_b
+    condition codes
+    m_mem_write
+
+Each one of these corresponds to a "LAB QUESTION" problem embedded in
+the code. We have reorganized these problems into Parts 1 through 5
+below.
+
+We recommend that you get Parts 1, 2, 3, and 4, working first.  This
+will yield a working y86 machine so long as NOP instructions are
+inserted between instructions that have dependencies.  Part 5 below
+asks that you consider the pipeline hazards, and make the necessary
+fixes.  So you know what the correct functionality is, we will provide
+a working simulator, but only object code.
+
+Part 1: Fetch stage
+
+  a) f_pc_increment. After this step, f.predPC should be set to the
+     correct value after each cycle, unless the fetched instruction
+     uses a constant value (to get that working, do part b).
+
+  b) f_need_valC. After this step, f.predPC should always be set to
+     the correct value after each cycle.
+
+  c) f_instr_valid (parts 1 and 2): After this step, we should
+     correctly detect not only when we have fetched an invalid icode,
+     but when the entire icode/ifun combination is invalid.
+
+  *)  f_select_pc: We will delay this circuit until after we complete
+     the logic for the pipeline hazard detection, since the two work
+     in tandem. Without this circuit, all the instructions that modify
+     the PC will be non-functional.
+
+Part 2: Decode stage
+
+  a) d_srcB: After this step, e.srcB will be correctly set in the
+     decode stage.
+
+  b) d_dstM: After this step, e.dstM will be correctly set in the
+     decode stage.
+
+Part 3: Execute stage
+
+  a) e_alu_b: After this step, m.valE will be correctly set in the
+     execute stage.
+
+  b) condition codes: After this step, the condition codes will be set
+     correctly by the ALU.
+
+Part 4: Memory stage
+
+  a) read_dmem: After this step, the data memory will read the data at
+     the address given to it (in the case of a read operation). The
+     correct result will be stored in w.valM.
+
+  b) m_mem_write: After this step, writes to memory will work. (Before
+     this step, they will not.)
+
+Part 5: Pipeline hazard detection
+
+  a) reg_data_dependency: After this step, the fetch and decode stage
+     will stall until all the instructions that write to a register
+     that the decode stage is trying to read from have exited the
+     pipeline. In the meantime, a bubble will be inserted into the
+     execute latch.
+
+  b) f_select_pc: After this step, the PC will be set to the correct
+     value in the case of a mispredicted branch or a RET
+     instruction. However, until you do the rest of part 5, the
+     pipeline will not work properly in these two scenarios.
+     Mispredicted branches and RET instructions can't be addressed
+     until they reach later stages in the pipeline, and so even though
+     the PC will be set to the correct thing, there will potentially
+     be several "bad" instructions in the pipeline. The final two
+     steps in this part will address this.
+
+  c) mispredicted_branch: After this step, the pipeline will work
+     correctly when a mispredicted branch is detected: the correct PC
+     will be fetched, and a bubble will be inserted into the execute
+     and memory latches (thereby "crushing" the "bad" instructions
+     that were previously in the decode and execute latches).
+
+  d) ret_d, ret_e, ret_m: After this step, the pipeline will correctly
+     introduce a bubble into the decode latch whenever it detects that
+     there is a RET instruction that still has not computed its target
+     address.
+
+After completing all the steps above, your pipeline should be fully functional.
