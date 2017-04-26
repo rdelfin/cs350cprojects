@@ -42,7 +42,7 @@
 #include <string.h>
 
 /* To change the real memory size, modify the constants below. */
-#define IMEMSIZE 0x10000
+#define 8EMSIZE 0x10000
 #define DMEMSIZE 0x10000
 
 /* Do not modify these constants. */
@@ -371,9 +371,15 @@ void read_dmem(u64 addr,           /* address to read
 	       byte *dmem_error)   /* signal indicating some
 				      kind of memory error */
 {
-  /* SOLUTION STARTS HERE */
+  if (addr+8 > IMEMSIZE) {
+    if (imem_error) *imem_error = 1;
+    return;
 
-  /* SOLUTION ENDS HERE */
+  for (int i=0; i < 8; i++; addr++) {
+    data[i] = imem[addr];
+  }
+
+  if (imem_error) *imem_error = 0;
 }
 
 void write_dmem(u64 addr,            /* address to write (unsigned 64-bit value) */
@@ -948,10 +954,12 @@ u64 e_alu(u64 a, u64 b, int alu_fun,
    * respect to the C comparison operators <, <=, >, >=.
    */
   /* SOLUTION STARTS HERE */
+  u64 sign_a = !!(a & (1 << 63))
+    , sign_b = !!(b & (1 << 63));
 
-  *zf = 0;
-  *sf = 0;
-  *of = 0;
+  *zf = (result == 0);
+  *sf = !!(result & (1 << 63));
+  *of = (sign_a && sign_b && !*sf) || (!sign_a && !sign_b && sign_c);
 
   /* SOLUTION ENDS HERE */
 
@@ -1050,7 +1058,7 @@ int m_mem_read(int icode) {
  * This question corresponds to Practice Problem 4.26.
  */
 int m_mem_write(int icode) {
-  return 0;
+  return (icode == RMMOVQ || icode == PUSHQ || icode == CALL);
 }
 
 int m_stat(int stat, int dmem_error) {
