@@ -578,13 +578,9 @@ int f_need_regids(int f_icode) {
  * should be helpful for this problem.
  */
 int f_need_valC(int icode) {
-  /* SOLUTION STARTS HERE */
-  /* DO NOT refer to any global variables!!! Only use the arguments to
-     the function. */
-
-  return 0; /* change this! */
-
-  /* SOLUTION ENDS HERE */
+  return (icode == MRMOVL || icode == RMMOVL ||
+          icode == IRMOVL ||
+          icode == JXX || icode == CALL);
 }
 
 /* LAB QUESTION: f_pc_increment
