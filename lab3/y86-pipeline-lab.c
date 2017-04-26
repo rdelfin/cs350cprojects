@@ -730,12 +730,25 @@ int d_srcA(int d_icode, int d_ra) {
  * to refer to figures 4.18 to 4.21 to complete this problem.
  */
 int d_srcB(int d_icode, int d_rb) {
-  /* SOLUTION STARTS HERE */
-  /* DO NOT use any global variables! */
+  int rb = RNONE;
 
-  return RNONE; /* change this! */
+  switch(d_icode) {
+    case OPQ:
+    case RMMOVQ:
+    case MRMOVQ:
+      rb = d_rb;
+      break;
+      
+    case PUSHQ:
+    case POPQ:
+    case CALL:
+    case RET:
+      rb = RRSP;
+      break;
 
-  /* SOLUTION ENDS HERE */
+  }
+
+  return rb;
 }
 
 int d_dstE(int d_icode, int d_rb) {
@@ -857,12 +870,10 @@ u64 e_alu_a(int icode, u64 valC, u64 valA) {
  * to refer to figures 4.18 to 4.21 to complete this problem.
  */
 u64 e_alu_b(int icode, u64 valB) {
-  /* SOLUTION STARTS HERE */
-  /* DO NOT use any global variables! */
+  if(icode == RRMOVQ || icode == IRMOVQ)
+      return 0;
 
-  return valB; /* change this! */
-
-  /* SOLUTION ENDS HERE */
+  return valB;
 }
 
 int e_set_cc(int icode) {
