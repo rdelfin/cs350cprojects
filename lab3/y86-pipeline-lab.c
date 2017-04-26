@@ -198,7 +198,7 @@ void show_breakpoints() {
   int i;
   printf("Breakpoints:\n");
   for (i = 0; i < num_breakpoints; i++)
-    printf("  %lld\n", breakpoints[i]);
+    printf("  %lu\n", breakpoints[i]);
   printf("\n");
 }
 
@@ -578,8 +578,8 @@ int f_need_regids(int f_icode) {
  * should be helpful for this problem.
  */
 int f_need_valC(int icode) {
-  return (icode == MRMOVL || icode == RMMOVL ||
-          icode == IRMOVL ||
+  return (icode == MRMOVQ || icode == RMMOVQ ||
+          icode == IRMOVQ ||
           icode == JXX || icode == CALL);
 }
 
@@ -776,12 +776,7 @@ int d_dstE(int d_icode, int d_rb) {
  * to refer to figures 4.18 to 4.21 to complete this problem.
  */
 int d_dstM(int d_icode, int d_ra) {
-  /* SOLUTION STARTS HERE */
-  /* DO NOT use any global variables! */
-
-  return RNONE; /* change this! */
-
-  /* SOLUTION ENDS HERE */
+  return RNONE;
 }
 
 u64 d_select_a(int d_icode, u64 d_rvalA, u64 d_valP) {
@@ -1140,42 +1135,42 @@ void rgfdump() {
   printf("stat = %d\n", stat);
   printf("zf = %d, of = %d, sf = %d\n\n", zf, of, sf);
 
-  printf("r00 [rax] = %10lld (0x%.2llx)\n", rgf[0], rgf[0]);
-  printf("r01 [rcx] = %10lld (0x%.2llx)\n", rgf[1], rgf[1]);
-  printf("r02 [rdx] = %10lld (0x%.2llx)\n", rgf[2], rgf[2]);
-  printf("r03 [rbx] = %10lld (0x%.2llx)\n", rgf[3], rgf[3]);
-  printf("r04 [rsp] = %10lld (0x%.2llx)\n", rgf[4], rgf[4]);
-  printf("r05 [rbp] = %10lld (0x%.2llx)\n", rgf[5], rgf[5]);
-  printf("r06 [rsi] = %10lld (0x%.2llx)\n", rgf[6], rgf[6]);
-  printf("r07 [rdi] = %10lld (0x%.2llx)\n", rgf[7], rgf[7]);
-  printf("r08       = %10lld (0x%.2llx)\n", rgf[8], rgf[8]);
-  printf("r09       = %10lld (0x%.2llx)\n", rgf[9], rgf[9]);
-  printf("r10       = %10lld (0x%.2llx)\n", rgf[10], rgf[10]);
-  printf("r11       = %10lld (0x%.2llx)\n", rgf[11], rgf[11]);
-  printf("r12       = %10lld (0x%.2llx)\n", rgf[12], rgf[12]);
-  printf("r13       = %10lld (0x%.2llx)\n", rgf[13], rgf[13]);
-  printf("r14       = %10lld (0x%.2llx)\n\n", rgf[14], rgf[14]);
+  printf("r00 [rax] = %10lu (0x%.2lx)\n", rgf[0], rgf[0]);
+  printf("r01 [rcx] = %10lu (0x%.2lx)\n", rgf[1], rgf[1]);
+  printf("r02 [rdx] = %10lu (0x%.2lx)\n", rgf[2], rgf[2]);
+  printf("r03 [rbx] = %10lu (0x%.2lx)\n", rgf[3], rgf[3]);
+  printf("r04 [rsp] = %10lu (0x%.2lx)\n", rgf[4], rgf[4]);
+  printf("r05 [rbp] = %10lu (0x%.2lx)\n", rgf[5], rgf[5]);
+  printf("r06 [rsi] = %10lu (0x%.2lx)\n", rgf[6], rgf[6]);
+  printf("r07 [rdi] = %10lu (0x%.2lx)\n", rgf[7], rgf[7]);
+  printf("r08       = %10lu (0x%.2lx)\n", rgf[8], rgf[8]);
+  printf("r09       = %10lu (0x%.2lx)\n", rgf[9], rgf[9]);
+  printf("r10       = %10lu (0x%.2lx)\n", rgf[10], rgf[10]);
+  printf("r11       = %10lu (0x%.2lx)\n", rgf[11], rgf[11]);
+  printf("r12       = %10lu (0x%.2lx)\n", rgf[12], rgf[12]);
+  printf("r13       = %10lu (0x%.2lx)\n", rgf[13], rgf[13]);
+  printf("r14       = %10lu (0x%.2lx)\n\n", rgf[14], rgf[14]);
 }
 
 void pipedump() {
   printf("Cycle count = %d\n\n", cycle_count);
 
-  printf("f.predPC  = %10lld\n\n", f.predPC);
+  printf("f.predPC  = %10lu\n\n", f.predPC);
 
   printf("d.stat    = %10d (0x%.2x)\n", d.stat, d.stat);
   printf("d.icode   = %10d (0x%.2x)\n", d.icode, d.icode);
   printf("d.ifun    = %10d (0x%.2x)\n", d.ifun, d.ifun);
   printf("d.rA      = %10d (0x%.2x)\n", d.rA, d.rA);
   printf("d.rB      = %10d (0x%.2x)\n", d.rB, d.rB);
-  printf("d.valC    = %10lld (0x%.2llx)\n", d.valC, d.valC);
-  printf("d.valP    = %10lld (0x%.2llx)\n\n", d.valP, d.valP);
+  printf("d.valC    = %10lu (0x%.2lx)\n", d.valC, d.valC);
+  printf("d.valP    = %10lu (0x%.2lx)\n\n", d.valP, d.valP);
 
   printf("e.stat    = %10d (0x%.2x)\n", e.stat, e.stat);
   printf("e.icode   = %10d (0x%.2x)\n", e.icode, e.icode);
   printf("e.ifun    = %10d (0x%.2x)\n", e.ifun, e.ifun);
-  printf("e.valC    = %10lld (0x%.2llx)\n", e.valC, e.valC);
-  printf("e.valA    = %10lld (0x%.2llx)\n", e.valA, e.valA);
-  printf("e.valB    = %10lld (0x%.2llx)\n", e.valB, e.valB);
+  printf("e.valC    = %10lu (0x%.2lx)\n", e.valC, e.valC);
+  printf("e.valA    = %10lu (0x%.2lx)\n", e.valA, e.valA);
+  printf("e.valB    = %10lu (0x%.2lx)\n", e.valB, e.valB);
   printf("e.dstE    = %10d (0x%.2x)\n", e.dstE, e.dstE);
   printf("e.dstM    = %10d (0x%.2x)\n", e.dstM, e.dstM);
   printf("e.srcA    = %10d (0x%.2x)\n", e.srcA, e.srcA);
@@ -1184,15 +1179,15 @@ void pipedump() {
   printf("m.stat    = %10d (0x%.2x)\n", m.stat, m.stat);
   printf("m.icode   = %10d (0x%.2x)\n", m.icode, m.icode);
   printf("m.Cnd     = %10d (0x%.2x)\n", m.Cnd, m.Cnd);
-  printf("m.valE    = %10lld (0x%.2llx)\n", m.valE, m.valE);
-  printf("m.valA    = %10lld (0x%.2llx)\n", m.valA, m.valA);
+  printf("m.valE    = %10lu (0x%.2lx)\n", m.valE, m.valE);
+  printf("m.valA    = %10lu (0x%.2lx)\n", m.valA, m.valA);
   printf("m.dstE    = %10d (0x%.2x)\n", m.dstE, m.dstE);
   printf("m.dstM    = %10d (0x%.2x)\n\n", m.dstM, m.dstM);
 
   printf("w.stat    = %10d (0x%.2x)\n", w.stat, w.stat);
   printf("w.icode   = %10d (0x%.2x)\n", w.icode, w.icode);
-  printf("w.valE    = %10lld (0x%.2llx)\n", w.valE, w.valE);
-  printf("w.valM    = %10lld (0x%.2llx)\n", w.valM, w.valM);
+  printf("w.valE    = %10lu (0x%.2lx)\n", w.valE, w.valE);
+  printf("w.valM    = %10lu (0x%.2lx)\n", w.valM, w.valM);
   printf("w.dstE    = %10d (0x%.2x)\n", w.dstE, w.dstE);
   printf("w.dstM    = %10d (0x%.2x)\n\n", w.dstM, w.dstM);
 
@@ -1220,7 +1215,7 @@ void dmemdump(int start, int end) {
     printf("dmem[%4d] = 0x%.2x", i, dmem[i]);
     if (i % 8 == 0) {
       u64 val = bytes_to_u64(&dmem[i]);
-      printf("   %10lld (0x%.2llx)", val, val);
+      printf("   %10lu (0x%.2lx)", val, val);
     }
     printf("\n");
   }
@@ -1237,7 +1232,7 @@ int readProgram(FILE *in) {
   fscanf(in, " ( ");
 
   int num_bytes = 0;
-  while(fscanf(in, " ( %lld . %lld ) ", &addr, &val) == 2) {
+  while(fscanf(in, " ( %lu . %lu ) ", &addr, &val) == 2) {
     if (addr > IMEMSIZE) return -1;
 
     imem[addr] = val;
@@ -1260,7 +1255,7 @@ int readData(FILE *in) {
   fscanf(in, " ( ");
 
   int num_bytes = 0;
-  while(fscanf(in, " ( %lld . %lld ) ", &addr, &val) == 2) {
+  while(fscanf(in, " ( %lu . %lu ) ", &addr, &val) == 2) {
     if (addr > DMEMSIZE) return -1;
     dmem[addr] = val;
     ++num_bytes;
@@ -1380,9 +1375,9 @@ int shell() {
   }
   else if (strncmp(cmd, "b", 1) == 0) {
     u64 bp;
-    if (sscanf(cmd, "%*s %lld\n", &bp) == 1) {
-      if (add_breakpoint(bp)) printf("Adding breakpoint at %lld\n", bp);
-      else printf("Could not add breakpoint at %lld\n", bp);
+    if (sscanf(cmd, "%*s %lu\n", &bp) == 1) {
+      if (add_breakpoint(bp)) printf("Adding breakpoint at %lu\n", bp);
+      else printf("Could not add breakpoint at %lu\n", bp);
     } else {
       printf("invalid format for bp; see help for details\n");
     }
