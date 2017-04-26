@@ -776,7 +776,10 @@ int d_dstE(int d_icode, int d_rb) {
  * to refer to figures 4.18 to 4.21 to complete this problem.
  */
 int d_dstM(int d_icode, int d_ra) {
-  return RNONE;
+  if(d_icode == MRMOVQ || d_icode == POPQ)
+    return d_ra;
+  else
+    return RNONE;
 }
 
 u64 d_select_a(int d_icode, u64 d_rvalA, u64 d_valP) {
