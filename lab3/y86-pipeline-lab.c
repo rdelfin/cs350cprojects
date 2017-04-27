@@ -42,7 +42,7 @@
 #include <string.h>
 
 /* To change the real memory size, modify the constants below. */
-#define 8EMSIZE 0x10000
+#define IMEMSIZE 0x10000
 #define DMEMSIZE 0x10000
 
 /* Do not modify these constants. */
@@ -372,14 +372,15 @@ void read_dmem(u64 addr,           /* address to read
 				      kind of memory error */
 {
   if (addr+8 > IMEMSIZE) {
-    if (imem_error) *imem_error = 1;
+    if (dmem_error) *dmem_error = 1;
     return;
-
-  for (int i=0; i < 8; i++; addr++) {
-    data[i] = imem[addr];
   }
 
-  if (imem_error) *imem_error = 0;
+  for (int i=0; i < 8; i++, addr++) {
+    data[i] = dmem[addr];
+  }
+
+  if (dmem_error) *dmem_error = 0;
 }
 
 void write_dmem(u64 addr,            /* address to write (unsigned 64-bit value) */
@@ -676,7 +677,7 @@ int fetch() {
   /* compute rA, rB, valC */
   int rA    = f_rA(inst, need_regids);
   int rB    = f_rB(inst, need_regids);
-  int valC  = f_valC(inst, need_regids);
+  u64 valC  = f_valC(inst, need_regids);
 
   /* LAB QUESTION: instr_valid (part 2)
    * Difficulty: 1/5
@@ -744,7 +745,7 @@ int d_srcB(int d_icode, int d_rb) {
     case MRMOVQ:
       rb = d_rb;
       break;
-      
+
     case PUSHQ:
     case POPQ:
     case CALL:
@@ -954,12 +955,12 @@ u64 e_alu(u64 a, u64 b, int alu_fun,
    * respect to the C comparison operators <, <=, >, >=.
    */
   /* SOLUTION STARTS HERE */
-  u64 sign_a = !!(a & (1 << 63))
-    , sign_b = !!(b & (1 << 63));
+  u64 sign_a = !!(a & ((u64)1 << 63))
+    , sign_b = !!(b & ((u64)1 << 63));
 
   *zf = (result == 0);
-  *sf = !!(result & (1 << 63));
-  *of = (sign_a && sign_b && !*sf) || (!sign_a && !sign_b && sign_c);
+  *sf = !!(result & ((u64)1 << 63));
+  *of = (sign_a && sign_b && !*sf) || (!sign_a && !sign_b && *sf);
 
   /* SOLUTION ENDS HERE */
 
