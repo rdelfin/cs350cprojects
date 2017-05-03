@@ -246,11 +246,34 @@ int reads_rsp(int icode) {
  * Section 4.5 in the book, particularly 4.5.5.
  */
 int reg_data_dependency() {
-  /* SOLUTION STARTS HERE */
+    if(reads_rA(d.icode)) {
+        if(e.dstE == d.rA || e.dstM == d.rA)
+            return 1;
+        if(m.dstE == d.rA || m.dstM == d.rA)
+            return 1;
+        if(w.dstE == d.rA || w.dstM == d.rA)
+            return 1;
+    }
 
-  return 0; /* change this! */
+    if(reads_rA(d.icode)) {
+        if(e.dstE == d.rB || e.dstM == d.rB)
+            return 1;
+        if(m.dstE == d.rB || m.dstM == d.rB)
+            return 1;
+        if(w.dstE == d.rB || w.dstM == d.rB)
+            return 1;
+    }
 
-  /* SOLUTION ENDS HERE */
+    if(reads_rsp(d.icode)) {
+        if(e.dstE == RRSP || e.dstM == RRSP)
+            return 1;
+        if(m.dstE == RRSP || m.dstM == RRSP)
+            return 1;
+        if(w.dstE == RRSP || w.dstM == RRSP)
+            return 1;
+    }
+
+    return 0;
 }
 
 /* LAB QUESTION: mispredicted_branch
@@ -277,11 +300,7 @@ int reg_data_dependency() {
  * Control Hazards."
  */
 int mispredicted_branch() {
-  /* SOLUTION STARTS HERE */
-
-  return 0; /* change this! */
-
-  /* SOLUTION ENDS HERE */
+    return m.icode == JXX && !m.Cnd;
 }
 
 /* LAB QUESTION: ret_d, ret_e, ret_m
@@ -298,25 +317,13 @@ int mispredicted_branch() {
  * latches, respectively.
  */
 int ret_d() {
-  /* SOLUTION STARTS HERE */
-
-  return 0; /* change this! */
-
-  /* SOLUTION ENDS HERE */
+  return d.icode == RET;
 }
 int ret_e() {
-  /* SOLUTION STARTS HERE */
-
-  return 0; /* change this! */
-
-  /* SOLUTION ENDS HERE */
+  return e.icode == RET;
 }
 int ret_m() {
-  /* SOLUTION STARTS HERE */
-
-  return 0; /* change this! */
-
-  /* SOLUTION ENDS HERE */
+  return m.icode == RET;
 }
 
 /* MEMORY ACCESS */
@@ -433,13 +440,11 @@ void write_dmem(u64 addr,            /* address to write (unsigned 64-bit value)
 u64 f_select_pc(int f_predPC,
 		int m_icode, int m_Cnd, int m_valA,
 		int w_icode, int w_valM) {
-  /* SOLUTION STARTS HERE */
-  /* DO NOT refer to any global variables!!! Only use the arguments to
-     the function. */
-
-  return f_predPC; /* change this! */
-
-  /* SOLUTION ENDS HERE */
+    if(m_icode == JXX && !m_Cnd)
+        return m_valA;
+    if(w_icode == RET)
+        return w_valM;
+    return f_predPC;
 }
 
 int f_icode(byte *bytes, int imem_error) {
@@ -610,7 +615,7 @@ int f_pc_increment(int select_pc, int need_valC, int need_regids) {
   return select_pc + 1 + (need_valC ? 8 : 0) + (need_regids ? 1 : 0);
 }
 
-int f_predict_pc(int f_icode, int f_valC, int f_pc_increment) {
+u64 f_predict_pc(int f_icode, u64 f_valC, int f_pc_increment) {
   if (f_icode == JXX || f_icode == CALL)
     return f_valC; /* predict taken for jumps */
   return f_pc_increment;
